@@ -21,7 +21,7 @@ public abstract partial class Q6Art
     }
 
     // 体の傾き, 前の腕(上・下), 後ろの腕(上・下), 前の脚(上・下), 後ろの脚(上・下), 腰の高さ。角度は真下が0、前がプラス
-    static readonly float[][] Poses =
+    internal static readonly float[][] Poses =
     [
         [3, 25, 60, -25, -5, 22, 10, -22, -40, 0],
         [12, 60, 120, -50, 10, 55, 10, -35, -95, -10],
