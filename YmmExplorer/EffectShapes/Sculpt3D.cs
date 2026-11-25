@@ -458,6 +458,7 @@ internal static partial class Models3D
         RegisterF1m(d);
         RegisterG1a(d);
         RegisterG1b(d);
+        RegisterG1c(d);
         return d;
     }
 
@@ -489,6 +490,7 @@ internal static partial class Models3D
     static partial void RegisterF1m(Dictionary<Type, QuickModel> d);
     static partial void RegisterG1a(Dictionary<Type, QuickModel> d);
     static partial void RegisterG1b(Dictionary<Type, QuickModel> d);
+    static partial void RegisterG1c(Dictionary<Type, QuickModel> d);
 }
 
 /// <summary>文字の形を三角形と輪郭にしたもの(同じ文字・大きさは覚えておく)</summary>

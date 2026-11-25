@@ -4,7 +4,7 @@ namespace YMM4EffectShapes;
 
 // =====================================================================
 //  専用3Dモデル: 218番 1032〜1061
-//   人物(残りのポーズ) / 図解 フローチャート〜組織図(立体の箱・玉・管で組んだ図とグラフ)
+//   人物(残りのポーズ) / 図解 フローチャート〜温度計(立体の箱・玉・管で組んだ図とグラフ。20〜29 は v111 で追加)
 // =====================================================================
 internal static partial class Models3D
 {
@@ -104,6 +104,83 @@ internal static partial class Models3D
                 m.Limb(-310, 0, 0, 310, 0, 0, 4.5f, 4.5f, W);
                 for (int i = 0; i < 5; i++) { float x = -250 + i * 125, s = i % 2 == 0 ? -1 : 1; m.Limb(x, 0, 0, x, s * 90, 0, 2, 2, W); m.Ball(x, 0, 0, 21, Tone(i, 5)); Box(x, s * 140, 112, 72, Tone(i, 5), 40); }
                 break;
+            case 20: // 相関図: まわりを回る玉と、中心の大きな玉
+                for (int i = 0; i < 6; i++) { float mm = i * 1.0472f + t * .18f, x = MathF.Cos(mm) * 235, y = MathF.Sin(mm) * 205, z = MathF.Sin(mm * 2f) * 60f; m.Limb(0, 0, 0, x, y, z, 3, 3, W); m.Ball(x, y, z, 54, Tone(i, 6)); }
+                m.Ball(0, 0, 0, 88, C);
+                break;
+            case 21: // 比較表: 2枚の厚い板と、浮き出た白い行
+                foreach (int s in Sides)
+                {
+                    m.Box(s * 160, 0, 0, 292, 500, 50, (s < 0 ? C : D) with { W = C.W * .92f }, .1f);
+                    for (int i = 0; i < 4; i++) m.Box(s * 160, -130 + i * 88, 28, 214, 26, 10, m.C(0xFFFFFF, .85f), .5f);
+                }
+                break;
+            case 22: // 天びん: 柱と台、ゆれるさお、ひもと半球の皿
+                {
+                    float k = MathF.Sin(t * 1.3f) * .14f;
+                    m.Cyl(0, 10, 0, 10, 460, W, .2f);
+                    m.Box(0, 250, 0, 220, 24, 160, W, .3f);
+                    m.Turn(0, -190, k, () =>
+                    {
+                        m.Limb(-250, -190, 0, 250, -190, 0, 7, 7, W);
+                        foreach (int s in Sides)
+                        {
+                            foreach (int r in Sides) m.Limb(s * 250, -190, 0, s * 250 + r * 80, 0, 0, 1.5f, 1.5f, W);
+                            m.Limb(s * 250, -190, 0, s * 250, 0, 80, 1.5f, 1.5f, W);
+                            var prof = new List<Vector2>();
+                            for (int i = 0; i <= 8; i++) { float a0 = i / 8f * 1.5708f; prof.Add(new(MathF.Sin(a0) * 82, MathF.Cos(a0) * 82)); }
+                            m.Lathe(s * 250, 0, s < 0 ? C : D, prof);
+                        }
+                    });
+                    m.Ball(0, -190, 10, 21, W);
+                    break;
+                }
+            case 23: // 成長の階段: 奥行きのある段と、上へのびる矢印
+                for (int i = 0; i < 5; i++) { float h = 95 + i * 95; m.Box(-240 + i * 120, 250 - h / 2f, 0, 110, h, 140, Tone(i, 5), .08f); }
+                Arr3(m, -250, 60, 240, -310, 80, W);
+                break;
+            case 24: // ガントチャート: 行の線、期間の棒、動く今日の線
+                for (int i = 0; i < 5; i++) { float s0 = i * 72, l = 170 + (i % 3) * 66; m.Limb(-280, -200 + i * 100, 0, 300, -200 + i * 100, 0, 1.5f, 1.5f, m.C(0xFFFFFF, .22f)); m.Box(-230 + s0 + l / 2f, -200 + i * 100, 0, l, 58, 50, Tone(i, 5), .4f); }
+                m.Box(-230 + w0 * 420, 0, 30, 10, 510, 10, W, .4f);
+                break;
+            case 25: // ヒートマップ: 値に合わせて高さが変わる柱のマス
+                for (int y = 0; y < 6; y++) for (int x = 0; x < 8; x++) { float v = .5f + .5f * MathF.Sin(x * .9f + y * 1.3f + t * .8f), h = 20 + v * 90; m.Box(-245 + x * 70, -175 + y * 70, h / 2f, 65, 65, h, Vector4.Lerp(D, C, v) with { W = C.W }, .15f); }
+                break;
+            case 26: // マインドマップ: 中心から曲がってのびる枝と、楕円の玉
+                for (int i = 0; i < 6; i++)
+                {
+                    float mm = i * 1.0472f + .5f, x = MathF.Cos(mm) * 260, y = MathF.Sin(mm) * 205, cx = MathF.Cos(mm + .3f) * 130, cy = MathF.Sin(mm + .3f) * 120, z = (i % 2 == 0 ? 1 : -1) * 50;
+                    m.Tube([new(0, 0, 0), new(cx, cy, z * .5f), new(x, y, z)], 4, Tone(i, 6));
+                    m.Ball(x, y, z, 78, 40, 36, Tone(i, 6));
+                }
+                m.Ball(0, 0, 0, 118, 72, 50, W); m.Ball(0, 0, 14, 104, 60, 46, C);
+                break;
+            case 27: // 数直線: 管の直線と矢じり、目盛りと数字、動く印
+                {
+                    m.Limb(-320, 0, 0, 310, 0, 0, 4, 4, W); m.Limb(305, 0, 0, 345, 0, 0, 24, 1, W);
+                    for (int i = -5; i <= 5; i++) { m.Limb(i * 56, -22, 0, i * 56, 22, 0, i == 0 ? 3.5f : 2, i == 0 ? 3.5f : 2, W); if (i % 5 == 0) m.Text(i.ToString(), 44, i * 56, 62, 4, 6, W); }
+                    float px = MathF.Sin(t) * 200;
+                    m.Ball(px, -52, 0, 22, C); m.Limb(px, -40, 0, px, -12, 0, 16, 1, C);
+                    break;
+                }
+            case 28: // 座標とグラフ: 2本の軸と矢じり、波打つ管の曲線
+                {
+                    m.Limb(-310, 0, 0, 300, 0, 0, 3, 3, W); m.Limb(0, 260, 0, 0, -250, 0, 3, 3, W);
+                    m.Limb(298, 0, 0, 330, 0, 0, 18, 1, W); m.Limb(0, -248, 0, 0, -280, 0, 18, 1, W);
+                    var q = new List<Vector3>(); for (int i = 0; i <= 60; i++) { float x = -280 + i * 9.33f; q.Add(new(x, -MathF.Sin(x * .022f + t) * 150, 6)); }
+                    m.Tube(q, 4.5f, C);
+                    break;
+                }
+            case 29: // 温度計: 透けたガラスの管と玉、上下する赤い液、目盛り
+                {
+                    float h = 110 + w0 * 300;
+                    m.Box(0, -50, 0, 112, 460, 112, m.C(0xFFFFFF, .3f), .5f);
+                    m.Ball(0, 200, 0, 98, m.C(0xFFFFFF, .3f));
+                    m.Ball(0, 200, 0, 74, C);
+                    m.Cyl(0, 170 - h / 2f, 0, 21, h, C, .2f);
+                    for (int i = 0; i < 7; i++) m.Box(79, -240 + i * 56, 0, 34, 5, 5, W, .5f);
+                    break;
+                }
             default: // 18 ツリー図 / 19 組織図
                 {
                     float[] x1 = [-160, 160], x2 = [-240, -80, 80, 240];
