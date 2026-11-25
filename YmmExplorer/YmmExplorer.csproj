@@ -1,0 +1,380 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <!-- YMM4本体のフォルダ。環境に合わせて変更するか、環境変数 YMM4DirPath を設定してください -->
+    <YMM4DirPath Condition="'$(YMM4DirPath)' == ''">I:\YMM4\YukkuriMovieMaker_v4</YMM4DirPath>
+
+    <!-- YMM4本体が.NET 10のため net10.0 を指定(.NET 10 SDKが必要) -->
+    <TargetFramework>net10.0-windows10.0.19041.0</TargetFramework>
+    <UseWPF>true</UseWPF>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <AssemblyName>YmmExplorer</AssemblyName>
+    <RootNamespace>YmmExplorer</RootNamespace>
+    <!-- 同梱の「演出図形」(EffectShapes フォルダー)は下で順番を決めて含めるので、自動の読み込みからは外す -->
+    <DefaultItemExcludes>$(DefaultItemExcludes);EffectShapes\**;Bridge3D\**</DefaultItemExcludes>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <Reference Include="YukkuriMovieMaker.Plugin">
+      <HintPath>$(YMM4DirPath)\YukkuriMovieMaker.Plugin.dll</HintPath>
+      <Private>false</Private>
+    </Reference>
+  </ItemGroup>
+
+  <!-- 同梱の「演出図形」(EffectShapes フォルダー)も、この YmmExplorer.dll の中に一緒にコンパイルします。
+       図形の並び順はこの順番（番号順）で決まるので、自動の読み込みから外して順番どおりに並べています -->
+  <ItemGroup>
+    <Reference Include="YukkuriMovieMaker.Controls">
+      <HintPath>$(YMM4DirPath)\YukkuriMovieMaker.Controls.dll</HintPath>
+      <Private>false</Private>
+    </Reference>
+    <Reference Include="YukkuriMovieMaker.Commons" Condition="Exists('$(YMM4DirPath)\YukkuriMovieMaker.Commons.dll')">
+      <HintPath>$(YMM4DirPath)\YukkuriMovieMaker.Commons.dll</HintPath>
+      <Private>false</Private>
+    </Reference>
+    <Reference Include="SharpGen.Runtime">
+      <HintPath>$(YMM4DirPath)\SharpGen.Runtime.dll</HintPath>
+      <Private>false</Private>
+    </Reference>
+    <Reference Include="SharpGen.Runtime.COM">
+      <HintPath>$(YMM4DirPath)\SharpGen.Runtime.COM.dll</HintPath>
+      <Private>false</Private>
+    </Reference>
+    <Reference Include="Vortice.Direct2D1">
+      <HintPath>$(YMM4DirPath)\Vortice.Direct2D1.dll</HintPath>
+      <Private>false</Private>
+    </Reference>
+    <Reference Include="Vortice.DXGI">
+      <HintPath>$(YMM4DirPath)\Vortice.DXGI.dll</HintPath>
+      <Private>false</Private>
+    </Reference>
+    <Reference Include="Vortice.Direct3D11">
+      <HintPath>$(YMM4DirPath)\Vortice.Direct3D11.dll</HintPath>
+      <Private>false</Private>
+    </Reference>
+    <Reference Include="Vortice.D3DCompiler">
+      <HintPath>$(YMM4DirPath)\Vortice.D3DCompiler.dll</HintPath>
+      <Private>false</Private>
+    </Reference>
+    <Reference Include="Vortice.DirectX">
+      <HintPath>$(YMM4DirPath)\Vortice.DirectX.dll</HintPath>
+      <Private>false</Private>
+    </Reference>
+    <Reference Include="Vortice.Mathematics">
+      <HintPath>$(YMM4DirPath)\Vortice.Mathematics.dll</HintPath>
+      <Private>false</Private>
+    </Reference>
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Include="EffectShapes\Common.cs" />
+    <Compile Include="EffectShapes\GeoKit.cs" />
+    <Compile Include="EffectShapes\FormulaKit.cs" />
+    <Compile Include="EffectShapes\Shape3DParams.cs" />
+    <Compile Include="EffectShapes\Shape3DMesh.cs" />
+    <Compile Include="EffectShapes\Shape3DNative.cs" />
+    <Compile Include="EffectShapes\Sculpt3D.cs" />
+    <Compile Include="EffectShapes\Models\Models_Q4a.cs" />
+    <Compile Include="EffectShapes\Models\Models_Q5a.cs" />
+    <Compile Include="EffectShapes\Models\Models_Q6a.cs" />
+    <Compile Include="EffectShapes\Models\Models_I1a.cs" />
+    <Compile Include="EffectShapes\Models\Models_I1b.cs" />
+    <Compile Include="EffectShapes\Models\Models_I1c.cs" />
+    <Compile Include="EffectShapes\Models\Models_I1d.cs" />
+    <Compile Include="EffectShapes\Models\Models_I2a.cs" />
+    <Compile Include="EffectShapes\Models\Models_I2b.cs" />
+    <Compile Include="EffectShapes\Models\Models_I2c.cs" />
+    <Compile Include="EffectShapes\Models\Models_I2d.cs" />
+    <Compile Include="EffectShapes\Models\Models_I2e.cs" />
+    <Compile Include="EffectShapes\Models\Models_I2f.cs" />
+    <Compile Include="EffectShapes\Models\Models_F1a.cs" />
+    <Compile Include="EffectShapes\Models\Models_F1b.cs" />
+    <Compile Include="EffectShapes\Models\Models_F1c.cs" />
+    <Compile Include="EffectShapes\Models\Models_F1d.cs" />
+    <Compile Include="EffectShapes\Models\Models_F1e.cs" />
+    <Compile Include="EffectShapes\Models\Models_F1f.cs" />
+    <Compile Include="EffectShapes\Shape3DRenderer.cs" />
+    <Compile Include="EffectShapes\Ymm43DBridge.cs" />
+    <Compile Include="EffectShapes\Shapes\01_Rain.cs" />
+    <Compile Include="EffectShapes\Shapes\02_RainRipple.cs" />
+    <Compile Include="EffectShapes\Shapes\03_Snow.cs" />
+    <Compile Include="EffectShapes\Shapes\04_Snowflake.cs" />
+    <Compile Include="EffectShapes\Shapes\05_Blizzard.cs" />
+    <Compile Include="EffectShapes\Shapes\06_Cloud.cs" />
+    <Compile Include="EffectShapes\Shapes\07_Lightning.cs" />
+    <Compile Include="EffectShapes\Shapes\08_Fog.cs" />
+    <Compile Include="EffectShapes\Shapes\09_Rainbow.cs" />
+    <Compile Include="EffectShapes\Shapes\10_Wind.cs" />
+    <Compile Include="EffectShapes\Shapes\11_Vortex.cs" />
+    <Compile Include="EffectShapes\Shapes\12_Sandstorm.cs" />
+    <Compile Include="EffectShapes\Shapes\13_Sky.cs" />
+    <Compile Include="EffectShapes\Shapes\14_Sun.cs" />
+    <Compile Include="EffectShapes\Shapes\15_NightSky.cs" />
+    <Compile Include="EffectShapes\Shapes\16_Stars.cs" />
+    <Compile Include="EffectShapes\Shapes\17_Meteors.cs" />
+    <Compile Include="EffectShapes\Shapes\18_Constellation.cs" />
+    <Compile Include="EffectShapes\Shapes\19_Space.cs" />
+    <Compile Include="EffectShapes\Shapes\20_Aurora.cs" />
+    <Compile Include="EffectShapes\Shapes\21_Skyline.cs" />
+    <Compile Include="EffectShapes\Shapes\22_Volcano.cs" />
+    <Compile Include="EffectShapes\Shapes\23_WaterDown.cs" />
+    <Compile Include="EffectShapes\Shapes\24_WaterUp.cs" />
+    <Compile Include="EffectShapes\Shapes\25_Waves.cs" />
+    <Compile Include="EffectShapes\Shapes\26_Splash.cs" />
+    <Compile Include="EffectShapes\Shapes\27_FrostedGlass.cs" />
+    <Compile Include="EffectShapes\Shapes\28_Ice.cs" />
+    <Compile Include="EffectShapes\Shapes\29_Fire.cs" />
+    <Compile Include="EffectShapes\Shapes\30_Lava.cs" />
+    <Compile Include="EffectShapes\Shapes\31_Smoke.cs" />
+    <Compile Include="EffectShapes\Shapes\32_Sakura.cs" />
+    <Compile Include="EffectShapes\Shapes\33_FallingLeaves.cs" />
+    <Compile Include="EffectShapes\Shapes\34_FlowerField.cs" />
+    <Compile Include="EffectShapes\Shapes\35_Flyers.cs" />
+    <Compile Include="EffectShapes\Shapes\36_Fireflies.cs" />
+    <Compile Include="EffectShapes\Shapes\37_Bubbles.cs" />
+    <Compile Include="EffectShapes\Shapes\38_Sparkle.cs" />
+    <Compile Include="EffectShapes\Shapes\39_Explosion.cs" />
+    <Compile Include="EffectShapes\Shapes\40_Fireworks.cs" />
+    <Compile Include="EffectShapes\Shapes\41_Laser.cs" />
+    <Compile Include="EffectShapes\Shapes\42_Beam.cs" />
+    <Compile Include="EffectShapes\Shapes\43_EnergyBall.cs" />
+    <Compile Include="EffectShapes\Shapes\44_Plasma.cs" />
+    <Compile Include="EffectShapes\Shapes\45_LensFlare.cs" />
+    <Compile Include="EffectShapes\Shapes\46_Spotlight.cs" />
+    <Compile Include="EffectShapes\Shapes\47_MagicCircle.cs" />
+    <Compile Include="EffectShapes\Shapes\48_Slash.cs" />
+    <Compile Include="EffectShapes\Shapes\49_Aura.cs" />
+    <Compile Include="EffectShapes\Shapes\50_Spell.cs" />
+    <Compile Include="EffectShapes\Shapes\51_Summon.cs" />
+    <Compile Include="EffectShapes\Shapes\52_Feathers.cs" />
+    <Compile Include="EffectShapes\Shapes\53_Confetti.cs" />
+    <Compile Include="EffectShapes\Shapes\54_Cracker.cs" />
+    <Compile Include="EffectShapes\Shapes\55_FuturePanel.cs" />
+    <Compile Include="EffectShapes\Shapes\56_HudShape.cs" />
+    <Compile Include="EffectShapes\Shapes\57_Neon.cs" />
+    <Compile Include="EffectShapes\Shapes\58_Hologram.cs" />
+    <Compile Include="EffectShapes\Shapes\59_Circuit.cs" />
+    <Compile Include="EffectShapes\Shapes\60_DigitalRain.cs" />
+    <Compile Include="EffectShapes\Shapes\61_DataStream.cs" />
+    <Compile Include="EffectShapes\Shapes\62_Warp.cs" />
+    <Compile Include="EffectShapes\Shapes\63_Shield.cs" />
+    <Compile Include="EffectShapes\Shapes\64_Portal.cs" />
+    <Compile Include="EffectShapes\Shapes\65_LockOn.cs" />
+    <Compile Include="EffectShapes\Shapes\66_Radar.cs" />
+    <Compile Include="EffectShapes\Shapes\67_Waveform.cs" />
+    <Compile Include="EffectShapes\Shapes\68_ScanBeam.cs" />
+    <Compile Include="EffectShapes\Shapes\69_Manga.cs" />
+    <Compile Include="EffectShapes\Shapes\70_Telop.cs" />
+    <Compile Include="EffectShapes\Shapes\71_Marker.cs" />
+    <Compile Include="EffectShapes\Shapes\72_Transition.cs" />
+    <Compile Include="EffectShapes\Shapes\72b_TransitionMore.cs" />
+    <Compile Include="EffectShapes\Shapes\73_FilmLook.cs" />
+    <Compile Include="EffectShapes\Shapes\74_Glitch.cs" />
+    <Compile Include="EffectShapes\Shapes\75_Gauge.cs" />
+    <Compile Include="EffectShapes\Shapes\76_Chart.cs" />
+    <Compile Include="EffectShapes\Shapes\77_Countdown.cs" />
+    <Compile Include="EffectShapes\Shapes\78_UiOverlay.cs" />
+    <Compile Include="EffectShapes\Shapes\79_Viewfinder.cs" />
+    <Compile Include="EffectShapes\Shapes\80_WindowGlass.cs" />
+    <Compile Include="EffectShapes\Shapes\81_GradientBg.cs" />
+    <Compile Include="EffectShapes\Shapes\82_GeoBg.cs" />
+    <Compile Include="EffectShapes\Shapes\83_Bokeh.cs" />
+    <Compile Include="EffectShapes\Shapes\84_DamageHit.cs" />
+    <Compile Include="EffectShapes\Shapes\85_HealBuff.cs" />
+    <Compile Include="EffectShapes\Shapes\86_LightSword.cs" />
+    <Compile Include="EffectShapes\Shapes\87_MuzzleFlash.cs" />
+    <Compile Include="EffectShapes\Shapes\88_BlackHole.cs" />
+    <Compile Include="EffectShapes\Shapes\89_CircleVisualizer.cs" />
+    <Compile Include="EffectShapes\Shapes\90_CyberGlobe.cs" />
+    <Compile Include="EffectShapes\Shapes\91_CockpitHud.cs" />
+    <Compile Include="EffectShapes\Shapes\92_DnaMolecule.cs" />
+    <Compile Include="EffectShapes\Shapes\93_Retrowave.cs" />
+    <Compile Include="EffectShapes\Shapes\94_FishSchool.cs" />
+    <Compile Include="EffectShapes\Shapes\95_SkyLanterns.cs" />
+    <Compile Include="EffectShapes\Shapes\96_Illumination.cs" />
+    <Compile Include="EffectShapes\Shapes\97_Wagara.cs" />
+    <Compile Include="EffectShapes\Shapes\98_Horror.cs" />
+    <Compile Include="EffectShapes\Shapes\99_Halloween.cs" />
+    <Compile Include="EffectShapes\Shapes\100_MoonPhase.cs" />
+    <Compile Include="EffectShapes\Shapes\101_StepProgress.cs" />
+    <Compile Include="EffectShapes\Shapes\102_StickyNote.cs" />
+    <Compile Include="EffectShapes\Shapes\103_Divider.cs" />
+    <Compile Include="EffectShapes\Shapes\104_ScreenFrame.cs" />
+    <Compile Include="EffectShapes\Shapes\105_Warning.cs" />
+    <Compile Include="EffectShapes\Shapes\106_RankingBadge.cs" />
+    <Compile Include="EffectShapes\Shapes\107_GameUi.cs" />
+    <Compile Include="EffectShapes\Shapes\108_Shine.cs" />
+    <Compile Include="EffectShapes\Shapes\109_LevelUp.cs" />
+    <Compile Include="EffectShapes\Shapes\110_TreasureChest.cs" />
+    <Compile Include="EffectShapes\Shapes\111_Gacha.cs" />
+    <Compile Include="EffectShapes\Shapes\112_Dizzy.cs" />
+    <Compile Include="EffectShapes\Shapes\113_MoneyRain.cs" />
+    <Compile Include="EffectShapes\Shapes\114_PixelArt.cs" />
+    <Compile Include="EffectShapes\Shapes\115_NamePlate.cs" />
+    <Compile Include="EffectShapes\Shapes\116_ChapterCard.cs" />
+    <Compile Include="EffectShapes\Shapes\117_VsScreen.cs" />
+    <Compile Include="EffectShapes\Shapes\118_Timeline.cs" />
+    <Compile Include="EffectShapes\Shapes\119_MapRoute.cs" />
+    <Compile Include="EffectShapes\Shapes\120_Checklist.cs" />
+    <Compile Include="EffectShapes\Shapes\121_BoardBg.cs" />
+    <Compile Include="EffectShapes\Shapes\122_ClockHourglass.cs" />
+    <Compile Include="EffectShapes\Shapes\123_NewYear.cs" />
+    <Compile Include="EffectShapes\Shapes\124_Tanabata.cs" />
+    <Compile Include="EffectShapes\Shapes\125_Summer.cs" />
+    <Compile Include="EffectShapes\Shapes\126_Christmas.cs" />
+    <Compile Include="EffectShapes\Shapes\127_MirrorBall.cs" />
+    <Compile Include="EffectShapes\Shapes\127b_TextKit.cs" />
+    <Compile Include="EffectShapes\Shapes\128_SpeechBubble.cs" />
+    <Compile Include="EffectShapes\Shapes\129_Arrow.cs" />
+    <Compile Include="EffectShapes\Shapes\130_Encircle.cs" />
+    <Compile Include="EffectShapes\Shapes\131_Annotation.cs" />
+    <Compile Include="EffectShapes\Shapes\132_CountUp.cs" />
+    <Compile Include="EffectShapes\Shapes\133_PieChart.cs" />
+    <Compile Include="EffectShapes\Shapes\134_Relationship.cs" />
+    <Compile Include="EffectShapes\Shapes\135_ChoiceWindow.cs" />
+    <Compile Include="EffectShapes\Shapes\136_NovelWindow.cs" />
+    <Compile Include="EffectShapes\Shapes\137_BossIntro.cs" />
+    <Compile Include="EffectShapes\Shapes\138_Achievement.cs" />
+    <Compile Include="EffectShapes\Shapes\139_InputDisplay.cs" />
+    <Compile Include="EffectShapes\Shapes\140_HeartsRise.cs" />
+    <Compile Include="EffectShapes\Shapes\141_SubscribeButton.cs" />
+    <Compile Include="EffectShapes\Shapes\142_CommentFlow.cs" />
+    <Compile Include="EffectShapes\Shapes\143_PhoneNotify.cs" />
+    <Compile Include="EffectShapes\Shapes\144_MangaMark.cs" />
+    <Compile Include="EffectShapes\Shapes\145_Gloom.cs" />
+    <Compile Include="EffectShapes\Shapes\146_WindowDrops.cs" />
+    <Compile Include="EffectShapes\Shapes\147_Komorebi.cs" />
+    <Compile Include="EffectShapes\Shapes\148_Grass.cs" />
+    <Compile Include="EffectShapes\Shapes\149_Dust.cs" />
+    <Compile Include="EffectShapes\Shapes\150_Vhs.cs" />
+    <Compile Include="EffectShapes\Shapes\151_OldPaper.cs" />
+    <Compile Include="EffectShapes\Shapes\152_CrtFrame.cs" />
+    <Compile Include="EffectShapes\Shapes\153_RankingBoard.cs" />
+    <Compile Include="EffectShapes\Shapes\154_CompareTable.cs" />
+    <Compile Include="EffectShapes\Shapes\155_BarRace.cs" />
+    <Compile Include="EffectShapes\Shapes\156_MapPulse.cs" />
+    <Compile Include="EffectShapes\Shapes\157_Flowchart.cs" />
+    <Compile Include="EffectShapes\Shapes\158_Handwriting.cs" />
+    <Compile Include="EffectShapes\Shapes\159_StatusScreen.cs" />
+    <Compile Include="EffectShapes\Shapes\160_ItemGet.cs" />
+    <Compile Include="EffectShapes\Shapes\161_ImpactText.cs" />
+    <Compile Include="EffectShapes\Shapes\162_Quiz.cs" />
+    <Compile Include="EffectShapes\Shapes\163_Roulette.cs" />
+    <Compile Include="EffectShapes\Shapes\164_LiveFrame.cs" />
+    <Compile Include="EffectShapes\Shapes\165_Donation.cs" />
+    <Compile Include="EffectShapes\Shapes\166_SnsPost.cs" />
+    <Compile Include="EffectShapes\Shapes\167_SearchBar.cs" />
+    <Compile Include="EffectShapes\Shapes\168_Reaction.cs" />
+    <Compile Include="EffectShapes\Shapes\169_Tears.cs" />
+    <Compile Include="EffectShapes\Shapes\170_Blush.cs" />
+    <Compile Include="EffectShapes\Shapes\171_Menacing.cs" />
+    <Compile Include="EffectShapes\Shapes\172_RoomBackground.cs" />
+    <Compile Include="EffectShapes\Shapes\173_NightView.cs" />
+    <Compile Include="EffectShapes\Shapes\174_Puddles.cs" />
+    <Compile Include="EffectShapes\Shapes\175_SpaceshipWindow.cs" />
+    <Compile Include="EffectShapes\Shapes\176_TreeTunnel.cs" />
+    <Compile Include="EffectShapes\Shapes\177_SplitScreen.cs" />
+    <Compile Include="EffectShapes\Shapes\178_Cinemascope.cs" />
+    <Compile Include="EffectShapes\Shapes\179_ImpactFlash.cs" />
+    <Compile Include="EffectShapes\Shapes\180_Kaleidoscope.cs" />
+    <Compile Include="EffectShapes\Shapes\181_QuickBase.cs" />
+    <Compile Include="EffectShapes\Shapes\182_QExplain.cs" />
+    <Compile Include="EffectShapes\Shapes\183_QGame.cs" />
+    <Compile Include="EffectShapes\Shapes\184_QUi.cs" />
+    <Compile Include="EffectShapes\Shapes\185_QChara.cs" />
+    <Compile Include="EffectShapes\Shapes\186_QNature.cs" />
+    <Compile Include="EffectShapes\Shapes\187_QSeason.cs" />
+    <Compile Include="EffectShapes\Shapes\188_QFantasy.cs" />
+    <Compile Include="EffectShapes\Shapes\189_QScreen.cs" />
+    <Compile Include="EffectShapes\Shapes\190_QBackdrop.cs" />
+    <Compile Include="EffectShapes\Shapes\191_QProps.cs" />
+    <Compile Include="EffectShapes\Shapes\192_QExplain2.cs" />
+    <Compile Include="EffectShapes\Shapes\193_QGame2.cs" />
+    <Compile Include="EffectShapes\Shapes\194_QSns2.cs" />
+    <Compile Include="EffectShapes\Shapes\195_QChara2.cs" />
+    <Compile Include="EffectShapes\Shapes\196_QNature2.cs" />
+    <Compile Include="EffectShapes\Shapes\197_QSeason2.cs" />
+    <Compile Include="EffectShapes\Shapes\198_QFantasy2.cs" />
+    <Compile Include="EffectShapes\Shapes\199_QBackdrop2.cs" />
+    <Compile Include="EffectShapes\Shapes\200a_QKit3.cs" />
+    <Compile Include="EffectShapes\Shapes\200_QExplain3.cs" />
+    <Compile Include="EffectShapes\Shapes\201_QGame3.cs" />
+    <Compile Include="EffectShapes\Shapes\202_QSns3.cs" />
+    <Compile Include="EffectShapes\Shapes\203_QChara3.cs" />
+    <Compile Include="EffectShapes\Shapes\204_QNature3.cs" />
+    <Compile Include="EffectShapes\Shapes\205_QSeason3.cs" />
+    <Compile Include="EffectShapes\Shapes\206_QFantasy3.cs" />
+    <Compile Include="EffectShapes\Shapes\207_QTransition3.cs" />
+    <Compile Include="EffectShapes\Shapes\208_QBackdrop3.cs" />
+    <Compile Include="EffectShapes\Shapes\209_QProps3.cs" />
+    <Compile Include="EffectShapes\Shapes\210a_QKit4.cs" />
+    <Compile Include="EffectShapes\Shapes\210_QThings4.cs" />
+    <Compile Include="EffectShapes\Shapes\211_QThings5.cs" />
+    <Compile Include="EffectShapes\Shapes\212_QThings6.cs" />
+    <Compile Include="EffectShapes\Shapes\213a_QKit5.cs" />
+    <Compile Include="EffectShapes\Shapes\213_QIcons1.cs" />
+    <Compile Include="EffectShapes\Shapes\214_QIcons2.cs" />
+    <Compile Include="EffectShapes\Shapes\215_QIcons3.cs" />
+    <Compile Include="EffectShapes\Shapes\216_PvStage3D.cs" />
+    <Compile Include="EffectShapes\Shapes\216b_PvFlat.cs" />
+    <Compile Include="EffectShapes\Shapes\217a_QKit6.cs" />
+    <Compile Include="EffectShapes\Shapes\218a_QKit7.cs" />
+    <Compile Include="EffectShapes\Shapes\218_QFamilies2.cs" />
+    <Compile Include="EffectShapes\Shapes\217_QFamilies.cs" />
+    <Compile Include="EffectShapes\Shapes\219_Solid3D.cs" />
+  </ItemGroup>
+
+  <!--
+    同梱プラグイン(Bundled フォルダー): サラウンドパン(音声エフェクト)・文字中心固定(映像エフェクト)・
+    MIDI ピアノロール/五線譜(図形)。YmmExplorer と同じフォルダーに一緒にコピーされ、YMM4 がそのまま読み込みます
+  -->
+  <ItemGroup>
+    <None Update="Bundled\*.dll;Bundled\*.txt" CopyToOutputDirectory="PreserveNewest" Link="%(Filename)%(Extension)" />
+  </ItemGroup>
+  <Target Name="WarnOldBundled" AfterTargets="Build">
+    <Warning Condition="Exists('$(YMM4DirPath)\user\plugin\SurroundPan\SurroundPan.dll')" Text="サラウンドパンは YmmExplorer に同梱されました。YMM4 を閉じて、前に単体で入れた $(YMM4DirPath)\user\plugin\SurroundPan フォルダーを削除してください(残っているとエフェクトが2つずつ出ます)" />
+    <Warning Condition="Exists('$(YMM4DirPath)\user\plugin\midi、五線譜プラグイン\MidiRollPlugin.dll')" Text="MIDI(ピアノロール・五線譜)は YmmExplorer に同梱されました。YMM4 を閉じて、前に入れた $(YMM4DirPath)\user\plugin\midi、五線譜プラグイン フォルダーを削除してください" />
+    <Warning Condition="Exists('$(YMM4DirPath)\user\plugin\TextCenterKeeper\TextCenterKeeper.dll')" Text="文字中心固定は YmmExplorer に同梱されました。YMM4 を閉じて、前に単体で入れた $(YMM4DirPath)\user\plugin\TextCenterKeeper フォルダーを削除してください" />
+  </Target>
+
+  <!-- 前に単体で入れた演出図形プラグインが残っていると、図形が2つずつ出てしまうので知らせる -->
+  <Target Name="WarnOldEffectShapes" AfterTargets="Build" Condition="Exists('$(YMM4DirPath)\user\plugin\YMM4EffectShapes\YMM4EffectShapes.dll')">
+    <Warning Text="演出図形プラグインは YmmExplorer に同梱されました。YMM4 を閉じて、前に単体で入れた $(YMM4DirPath)\user\plugin\YMM4EffectShapes フォルダーを削除してください(残っていると図形が重複します)" />
+  </Target>
+
+  <!-- ビルド後にYMM4のpluginフォルダへ自動コピー(YMM4を閉じてからビルドしてください) -->
+  <!-- PDFプレビュー(Windows.Data.Pdf)のために Microsoft.Windows.SDK.NET.dll / WinRT.Runtime.dll も一緒にコピーします -->
+  <!-- 3Dプレビュー(YMM43D)との橋渡し: YMM43D がある時だけ作って、.bin の名前で置く(YMM4 がプラグインとして読まないように) -->
+  <PropertyGroup>
+    <YMM43DPath Condition="'$(YMM43DPath)' == ''">$(YMM4DirPath)\user\plugin\YMM4_3D\YMM43D.dll</YMM43DPath>
+  </PropertyGroup>
+  <Target Name="BuildBridge3D" AfterTargets="Build" BeforeTargets="CopyToYmm" Condition="Exists('$(YMM43DPath)')">
+    <MSBuild Projects="Bridge3D\Bridge3D.csproj" Properties="Configuration=$(Configuration);YMM4DirPath=$(YMM4DirPath);YMM43DPath=$(YMM43DPath)" Targets="Restore;Build" />
+    <Copy SourceFiles="Bridge3D\bin\$(Configuration)\net10.0-windows10.0.19041.0\YmmExplorer.Bridge3D.dll" DestinationFiles="$(OutDir)YmmExplorer.Bridge3D.bin" />
+  </Target>
+  <Target Name="CopyToYmm" AfterTargets="Build" Condition="Exists('$(YMM4DirPath)\user\plugin')">
+    <ItemGroup>
+      <PluginFile Include="$(OutDir)*.dll;$(OutDir)$(AssemblyName).deps.json;$(OutDir)*利用規約.txt;$(OutDir)YmmExplorer.Bridge3D.bin" />
+    </ItemGroup>
+    <Copy SourceFiles="@(PluginFile)" DestinationFolder="$(YMM4DirPath)\user\plugin\YmmExplorer" />
+    <!-- 以前の版で別 DLL として入れた演出図形が残っていると図形が重複するので消す -->
+    <Delete Files="$(YMM4DirPath)\user\plugin\YmmExplorer\YMM4EffectShapes.dll" ContinueOnError="true" />
+  </Target>
+
+
+  <!--
+    同梱の演出図形で使う、文字・フォントの入力欄の属性(TextEditor / FontComboBox)が、
+    このYMM4にあるかを調べる。無い時は、代わりの属性を使う(ビルドは通り、YMM4標準の画面には欄が出ない)
+  -->
+  <Target Name="DetectYmmEditorAttributes" BeforeTargets="CoreCompile">
+    <PropertyGroup>
+      <_YmmCtlText Condition="Exists('$(YMM4DirPath)\YukkuriMovieMaker.Controls.dll')">$([System.IO.File]::ReadAllText('$(YMM4DirPath)\YukkuriMovieMaker.Controls.dll'))</_YmmCtlText>
+      <_YmmPlgText Condition="Exists('$(YMM4DirPath)\YukkuriMovieMaker.Plugin.dll')">$([System.IO.File]::ReadAllText('$(YMM4DirPath)\YukkuriMovieMaker.Plugin.dll'))</_YmmPlgText>
+      <DefineConstants Condition="'$(_YmmCtlText.Contains(`TextEditorAttribute`))' == 'True' Or '$(_YmmPlgText.Contains(`TextEditorAttribute`))' == 'True'">$(DefineConstants);YMM_HAS_TEXTEDITOR</DefineConstants>
+      <DefineConstants Condition="'$(_YmmCtlText.Contains(`FontComboBoxAttribute`))' == 'True' Or '$(_YmmPlgText.Contains(`FontComboBoxAttribute`))' == 'True'">$(DefineConstants);YMM_HAS_FONTCOMBOBOX</DefineConstants>
+      <_YmmCtlText></_YmmCtlText>
+      <_YmmPlgText></_YmmPlgText>
+    </PropertyGroup>
+    <Message Importance="high" Text="YmmExplorer: YMM4の文字入力欄 = $(DefineConstants.Contains('YMM_HAS_TEXTEDITOR')) / フォント選択欄 = $(DefineConstants.Contains('YMM_HAS_FONTCOMBOBOX'))" />
+  </Target>
+</Project>

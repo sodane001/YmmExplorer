@@ -1,0 +1,195 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net10.0-windows10.0.19041.0</TargetFramework>
+    <UseWPF>true</UseWPF>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <LangVersion>latest</LangVersion>
+    <!-- 図形の並び順は、下のCompile項目の順（= Shapes フォルダの番号順）で決まります -->
+    <EnableDefaultCompileItems>false</EnableDefaultCompileItems>
+    <AssemblyName>YMM4EffectShapes</AssemblyName>
+    <RootNamespace>YMM4EffectShapes</RootNamespace>
+    <!-- YMM4DirPath は同じフォルダの Directory.Build.props で指定します -->
+  </PropertyGroup>
+
+  <ItemGroup>
+    <Reference Include="YukkuriMovieMaker.Plugin">
+      <HintPath>$(YMM4DirPath)YukkuriMovieMaker.Plugin.dll</HintPath>
+      <Private>false</Private>
+    </Reference>
+    <Reference Include="YukkuriMovieMaker.Controls">
+      <HintPath>$(YMM4DirPath)YukkuriMovieMaker.Controls.dll</HintPath>
+      <Private>false</Private>
+    </Reference>
+    <Reference Include="YukkuriMovieMaker.Commons" Condition="Exists('$(YMM4DirPath)YukkuriMovieMaker.Commons.dll')">
+      <HintPath>$(YMM4DirPath)YukkuriMovieMaker.Commons.dll</HintPath>
+      <Private>false</Private>
+    </Reference>
+    <Reference Include="SharpGen.Runtime">
+      <HintPath>$(YMM4DirPath)SharpGen.Runtime.dll</HintPath>
+      <Private>false</Private>
+    </Reference>
+    <Reference Include="SharpGen.Runtime.COM">
+      <HintPath>$(YMM4DirPath)SharpGen.Runtime.COM.dll</HintPath>
+      <Private>false</Private>
+    </Reference>
+    <Reference Include="Vortice.Direct2D1">
+      <HintPath>$(YMM4DirPath)Vortice.Direct2D1.dll</HintPath>
+      <Private>false</Private>
+    </Reference>
+    <Reference Include="Vortice.DirectX">
+      <HintPath>$(YMM4DirPath)Vortice.DirectX.dll</HintPath>
+      <Private>false</Private>
+    </Reference>
+    <Reference Include="Vortice.Mathematics">
+      <HintPath>$(YMM4DirPath)Vortice.Mathematics.dll</HintPath>
+      <Private>false</Private>
+    </Reference>
+  </ItemGroup>
+
+  <ItemGroup>
+    <Compile Include="Common.cs" />
+    <Compile Include="Shapes\01_Rain.cs" />
+    <Compile Include="Shapes\02_RainRipple.cs" />
+    <Compile Include="Shapes\03_Snow.cs" />
+    <Compile Include="Shapes\04_Snowflake.cs" />
+    <Compile Include="Shapes\05_Blizzard.cs" />
+    <Compile Include="Shapes\06_Cloud.cs" />
+    <Compile Include="Shapes\07_Lightning.cs" />
+    <Compile Include="Shapes\08_Fog.cs" />
+    <Compile Include="Shapes\09_Rainbow.cs" />
+    <Compile Include="Shapes\10_Wind.cs" />
+    <Compile Include="Shapes\11_Vortex.cs" />
+    <Compile Include="Shapes\12_Sandstorm.cs" />
+    <Compile Include="Shapes\13_Sky.cs" />
+    <Compile Include="Shapes\14_Sun.cs" />
+    <Compile Include="Shapes\15_NightSky.cs" />
+    <Compile Include="Shapes\16_Stars.cs" />
+    <Compile Include="Shapes\17_Meteors.cs" />
+    <Compile Include="Shapes\18_Constellation.cs" />
+    <Compile Include="Shapes\19_Space.cs" />
+    <Compile Include="Shapes\20_Aurora.cs" />
+    <Compile Include="Shapes\21_Skyline.cs" />
+    <Compile Include="Shapes\22_Volcano.cs" />
+    <Compile Include="Shapes\23_WaterDown.cs" />
+    <Compile Include="Shapes\24_WaterUp.cs" />
+    <Compile Include="Shapes\25_Waves.cs" />
+    <Compile Include="Shapes\26_Splash.cs" />
+    <Compile Include="Shapes\27_FrostedGlass.cs" />
+    <Compile Include="Shapes\28_Ice.cs" />
+    <Compile Include="Shapes\29_Fire.cs" />
+    <Compile Include="Shapes\30_Lava.cs" />
+    <Compile Include="Shapes\31_Smoke.cs" />
+    <Compile Include="Shapes\32_Sakura.cs" />
+    <Compile Include="Shapes\33_FallingLeaves.cs" />
+    <Compile Include="Shapes\34_FlowerField.cs" />
+    <Compile Include="Shapes\35_Flyers.cs" />
+    <Compile Include="Shapes\36_Fireflies.cs" />
+    <Compile Include="Shapes\37_Bubbles.cs" />
+    <Compile Include="Shapes\38_Sparkle.cs" />
+    <Compile Include="Shapes\39_Explosion.cs" />
+    <Compile Include="Shapes\40_Fireworks.cs" />
+    <Compile Include="Shapes\41_Laser.cs" />
+    <Compile Include="Shapes\42_Beam.cs" />
+    <Compile Include="Shapes\43_EnergyBall.cs" />
+    <Compile Include="Shapes\44_Plasma.cs" />
+    <Compile Include="Shapes\45_LensFlare.cs" />
+    <Compile Include="Shapes\46_Spotlight.cs" />
+    <Compile Include="Shapes\47_MagicCircle.cs" />
+    <Compile Include="Shapes\48_Slash.cs" />
+    <Compile Include="Shapes\49_Aura.cs" />
+    <Compile Include="Shapes\50_Spell.cs" />
+    <Compile Include="Shapes\51_Summon.cs" />
+    <Compile Include="Shapes\52_Feathers.cs" />
+    <Compile Include="Shapes\53_Confetti.cs" />
+    <Compile Include="Shapes\54_Cracker.cs" />
+    <Compile Include="Shapes\55_FuturePanel.cs" />
+    <Compile Include="Shapes\56_HudShape.cs" />
+    <Compile Include="Shapes\57_Neon.cs" />
+    <Compile Include="Shapes\58_Hologram.cs" />
+    <Compile Include="Shapes\59_Circuit.cs" />
+    <Compile Include="Shapes\60_DigitalRain.cs" />
+    <Compile Include="Shapes\61_DataStream.cs" />
+    <Compile Include="Shapes\62_Warp.cs" />
+    <Compile Include="Shapes\63_Shield.cs" />
+    <Compile Include="Shapes\64_Portal.cs" />
+    <Compile Include="Shapes\65_LockOn.cs" />
+    <Compile Include="Shapes\66_Radar.cs" />
+    <Compile Include="Shapes\67_Waveform.cs" />
+    <Compile Include="Shapes\68_ScanBeam.cs" />
+    <Compile Include="Shapes\69_Manga.cs" />
+    <Compile Include="Shapes\70_Telop.cs" />
+    <Compile Include="Shapes\71_Marker.cs" />
+    <Compile Include="Shapes\72_Transition.cs" />
+    <Compile Include="Shapes\72b_TransitionMore.cs" />
+    <Compile Include="Shapes\73_FilmLook.cs" />
+    <Compile Include="Shapes\74_Glitch.cs" />
+    <Compile Include="Shapes\75_Gauge.cs" />
+    <Compile Include="Shapes\76_Chart.cs" />
+    <Compile Include="Shapes\77_Countdown.cs" />
+    <Compile Include="Shapes\78_UiOverlay.cs" />
+    <Compile Include="Shapes\79_Viewfinder.cs" />
+    <Compile Include="Shapes\80_WindowGlass.cs" />
+    <Compile Include="Shapes\81_GradientBg.cs" />
+    <Compile Include="Shapes\82_GeoBg.cs" />
+    <Compile Include="Shapes\83_Bokeh.cs" />
+    <Compile Include="Shapes\84_DamageHit.cs" />
+    <Compile Include="Shapes\85_HealBuff.cs" />
+    <Compile Include="Shapes\86_LightSword.cs" />
+    <Compile Include="Shapes\87_MuzzleFlash.cs" />
+    <Compile Include="Shapes\88_BlackHole.cs" />
+    <Compile Include="Shapes\89_CircleVisualizer.cs" />
+    <Compile Include="Shapes\90_CyberGlobe.cs" />
+    <Compile Include="Shapes\91_CockpitHud.cs" />
+    <Compile Include="Shapes\92_DnaMolecule.cs" />
+    <Compile Include="Shapes\93_Retrowave.cs" />
+    <Compile Include="Shapes\94_FishSchool.cs" />
+    <Compile Include="Shapes\95_SkyLanterns.cs" />
+    <Compile Include="Shapes\96_Illumination.cs" />
+    <Compile Include="Shapes\97_Wagara.cs" />
+    <Compile Include="Shapes\98_Horror.cs" />
+    <Compile Include="Shapes\99_Halloween.cs" />
+    <Compile Include="Shapes\100_MoonPhase.cs" />
+    <Compile Include="Shapes\101_StepProgress.cs" />
+    <Compile Include="Shapes\102_StickyNote.cs" />
+    <Compile Include="Shapes\103_Divider.cs" />
+    <Compile Include="Shapes\104_ScreenFrame.cs" />
+    <Compile Include="Shapes\105_Warning.cs" />
+    <Compile Include="Shapes\106_RankingBadge.cs" />
+    <Compile Include="Shapes\107_GameUi.cs" />
+    <Compile Include="Shapes\108_Shine.cs" />
+    <Compile Include="Shapes\109_LevelUp.cs" />
+    <Compile Include="Shapes\110_TreasureChest.cs" />
+    <Compile Include="Shapes\111_Gacha.cs" />
+    <Compile Include="Shapes\112_Dizzy.cs" />
+    <Compile Include="Shapes\113_MoneyRain.cs" />
+    <Compile Include="Shapes\114_PixelArt.cs" />
+    <Compile Include="Shapes\115_NamePlate.cs" />
+    <Compile Include="Shapes\116_ChapterCard.cs" />
+    <Compile Include="Shapes\117_VsScreen.cs" />
+    <Compile Include="Shapes\118_Timeline.cs" />
+    <Compile Include="Shapes\119_MapRoute.cs" />
+    <Compile Include="Shapes\120_Checklist.cs" />
+    <Compile Include="Shapes\121_BoardBg.cs" />
+    <Compile Include="Shapes\122_ClockHourglass.cs" />
+    <Compile Include="Shapes\123_NewYear.cs" />
+    <Compile Include="Shapes\124_Tanabata.cs" />
+    <Compile Include="Shapes\125_Summer.cs" />
+    <Compile Include="Shapes\126_Christmas.cs" />
+    <Compile Include="Shapes\127_MirrorBall.cs" />
+  </ItemGroup>
+
+  <!-- YMM4DirPath の設定ミスを分かりやすく通知 -->
+  <Target Name="CheckYmmDir" BeforeTargets="ResolveAssemblyReferences">
+    <Error Condition="!Exists('$(YMM4DirPath)YukkuriMovieMaker.Plugin.dll')"
+           Text="Directory.Build.props の YMM4DirPath を YMM4 のインストールフォルダに設定してください（現在の値: $(YMM4DirPath)）" />
+  </Target>
+
+  <!-- ビルド後、YMM4のpluginフォルダへ自動コピー -->
+  <Target Name="PostBuild" AfterTargets="Build" Condition="'$(SkipPluginCopy)' != 'true'">
+    <MakeDir Directories="$(YMM4DirPath)user\plugin\$(AssemblyName)" />
+    <Copy SourceFiles="$(TargetPath)" DestinationFolder="$(YMM4DirPath)user\plugin\$(AssemblyName)" SkipUnchangedFiles="true" />
+  </Target>
+
+</Project>

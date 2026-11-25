@@ -1,0 +1,25 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <!-- 3Dプレビュー(YMM43D)との橋渡し。YMM43D.dll は参照するだけで、出力にはコピーしない(同梱しない) -->
+  <PropertyGroup>
+    <TargetFramework>net10.0-windows10.0.19041.0</TargetFramework>
+    <UseWPF>true</UseWPF>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <AssemblyName>YmmExplorer.Bridge3D</AssemblyName>
+    <RootNamespace>YmmExplorer.Bridge3D</RootNamespace>
+    <YMM4DirPath Condition="'$(YMM4DirPath)' == ''">I:\YMM4\YukkuriMovieMaker_v4</YMM4DirPath>
+    <YMM43DPath Condition="'$(YMM43DPath)' == ''">$(YMM4DirPath)\user\plugin\YMM4_3D\YMM43D.dll</YMM43DPath>
+    <GenerateDependencyFile>false</GenerateDependencyFile>
+  </PropertyGroup>
+  <ItemGroup>
+    <Reference Include="YMM43D"><HintPath>$(YMM43DPath)</HintPath><Private>false</Private></Reference>
+    <Reference Include="YukkuriMovieMaker.Plugin"><HintPath>$(YMM4DirPath)\YukkuriMovieMaker.Plugin.dll</HintPath><Private>false</Private></Reference>
+    <Reference Include="SharpGen.Runtime"><HintPath>$(YMM4DirPath)\SharpGen.Runtime.dll</HintPath><Private>false</Private></Reference>
+    <Reference Include="SharpGen.Runtime.COM"><HintPath>$(YMM4DirPath)\SharpGen.Runtime.COM.dll</HintPath><Private>false</Private></Reference>
+    <Reference Include="Vortice.Direct2D1"><HintPath>$(YMM4DirPath)\Vortice.Direct2D1.dll</HintPath><Private>false</Private></Reference>
+    <Reference Include="Vortice.Direct3D11"><HintPath>$(YMM4DirPath)\Vortice.Direct3D11.dll</HintPath><Private>false</Private></Reference>
+    <Reference Include="Vortice.DirectX"><HintPath>$(YMM4DirPath)\Vortice.DirectX.dll</HintPath><Private>false</Private></Reference>
+    <Reference Include="Vortice.DXGI"><HintPath>$(YMM4DirPath)\Vortice.DXGI.dll</HintPath><Private>false</Private></Reference>
+    <Reference Include="Vortice.Mathematics"><HintPath>$(YMM4DirPath)\Vortice.Mathematics.dll</HintPath><Private>false</Private></Reference>
+  </ItemGroup>
+</Project>

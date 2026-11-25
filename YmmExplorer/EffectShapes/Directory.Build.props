@@ -1,0 +1,9 @@
+<Project>
+  <PropertyGroup>
+    <!-- YMM4のインストールフォルダ。YmmExplorer から一緒にビルドする時は YmmExplorer.csproj の値が渡されます -->
+    <YMM4DirPath Condition="'$(YMM4DirPath)' == ''">I:\YMM4\YukkuriMovieMaker_v4\</YMM4DirPath>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(YMM4DirPath)' != '' and !HasTrailingSlash('$(YMM4DirPath)')">
+    <YMM4DirPath>$(YMM4DirPath)\</YMM4DirPath>
+  </PropertyGroup>
+</Project>
