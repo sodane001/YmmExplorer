@@ -33,7 +33,7 @@ internal static partial class Models3D
             m.Ball(0, 0, 0, 245, C);
             float g = (1 + MathF.Sqrt(5)) / 2f;
             Vector3[] ico = [new(0, 1, g), new(0, -1, g), new(0, 1, -g), new(0, -1, -g), new(1, g, 0), new(-1, g, 0), new(1, -g, 0), new(-1, -g, 0), new(g, 0, 1), new(-g, 0, 1), new(g, 0, -1), new(-g, 0, -1)];
-            foreach (var p in ico) { var c = Vector3.Normalize(p) * 178; m.Ball(c.X, c.Y, c.Z, 72, D); }
+            foreach (var p in ico) { var c = Vector3.Normalize(p) * 90; m.Ball(c.X, c.Y, c.Z, 162, D); }
         });
         // 野球ボール: 球と、表面を回る2本の赤い縫い目
         Icon(d, typeof(X1542Parameter), (m, t, C, D) =>
