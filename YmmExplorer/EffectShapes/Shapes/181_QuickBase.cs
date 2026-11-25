@@ -1,4 +1,4 @@
-using System.ComponentModel.DataAnnotations;
+﻿using System.ComponentModel.DataAnnotations;
 using System.Numerics;
 using Vortice;
 using Vortice.Direct2D1;
@@ -160,6 +160,34 @@ public abstract class QuickShapeParameter : EffectShapeParameterBase, IParamGuid
     /// <summary>出てからの進み(0→1、出る時間をかけて)</summary>
     protected float Intro(in DrawContext c, float delay = 0f, float dur = 0.5f) => Math.Clamp((c.Time - delay) / MathF.Max(0.01f, dur), 0f, 1f);
     protected string Str => TextKit.Lines(Text);
+    /// <summary>専用3Dモデル用: 「文字」の行・項目(カンマ・読点・改行で区切る)</summary>
+    internal List<string> ItemsForModel => Items;
+    /// <summary>専用3Dモデル用: 画面いっぱいの背景として描く図形か(位置・大きさをかけない)</summary>
+    internal virtual bool SceneForModel => Models3D.IsScene(GetType());
+    /// <summary>専用3Dモデル用: 出る時に、はずんで大きくなるか</summary>
+    private protected virtual bool PopInForModel => false;
+
+    /// <summary>専用の3Dモデルがあれば、それを組み立てる(2Dの絵と同じ位置・大きさ・動き)</summary>
+    internal override bool BuildNative3D(in DrawContext c, Native3D n)
+    {
+        if (!UseModel3D || !Models3D.TryGet(GetType(), out var model)) return false;
+        bool scene = SceneForModel;
+        float a = DrawKit.InOut(c, c.F(InTime), c.F(OutTime)) * c.F(Opacity) / 100f;
+        float fov = Math.Clamp(c.F(Fov3D), 1f, 170f) * MathF.PI / 180f;
+        var o = scene ? new Vector2(c.Width / 2f, c.Height / 2f) : P0(c);
+        n.Lit = true; n.Width = c.Width; n.Height = c.Height;
+        n.Cam = c.Height / 2f / MathF.Tan(fov / 2f);
+        n.PivotXY = new Vector2(o.X - c.Width / 2f, c.Height / 2f - o.Y); n.PivotZ = 0f;
+        if (a <= 0.002f) return true;
+        var m = new Sculpt(n, o.X, o.Y, scene ? U0(c) : U(c), a, c.Width, c.Height);
+        m.Font = string.IsNullOrWhiteSpace(Font) ? TextKit.DefaultFont : Font;
+        m.Now = c.Time;
+        float pi = scene || !PopInForModel ? 1f : MathF.Max(.01f, DrawKit.EaseOutBack(Intro(c, 0f, .4f)));
+        float t = c.Time * Spd(c), v = Amt(c), v2 = Amt2(c);
+        float rot = Gfx.Rad(c.F(Rotation));
+        m.Turn(0, 0, rot, () => m.Scale(0, 0, 0, pi, () => model(this, m, t, v, v2)));
+        return true;
+    }
     protected List<string> Items => TextKit.Lines(Text).Split(new[] { '\n', ',', '、' }, StringSplitOptions.None).Select(x => x.Trim()).Where(x => x.Length > 0).ToList();
     protected Color4 C1(float a) => Gfx.C4(Color1, a);
     protected Color4 C2(float a) => Gfx.C4(Color2, a);

@@ -419,6 +419,10 @@ internal static partial class Models3D
 
     public static IReadOnlyCollection<Type> Done => (quick ??= BuildQuick()).Keys;
 
+    /// <summary>画面いっぱいに描く図形(位置・大きさをかけず、画面のまん中が原点)</summary>
+    static readonly HashSet<Type> sceneTypes = [];
+    public static bool IsScene(Type t) { quick ??= BuildQuick(); return sceneTypes.Contains(t); }
+
     /// <summary>2D版の図形のキー(例: YMM4EffectShapes.S881Plugin)に、専用の3Dモデルがあるか</summary>
     public static bool HasModelFor(string key2D)
     {
@@ -464,6 +468,10 @@ internal static partial class Models3D
         RegisterG1f(d);
         RegisterG1g(d);
         RegisterG1h(d);
+        RegisterH1a(d);
+        RegisterH1b(d);
+        RegisterH1c(d);
+        RegisterH1d(d);
         return d;
     }
 
@@ -501,6 +509,10 @@ internal static partial class Models3D
     static partial void RegisterG1f(Dictionary<Type, QuickModel> d);
     static partial void RegisterG1g(Dictionary<Type, QuickModel> d);
     static partial void RegisterG1h(Dictionary<Type, QuickModel> d);
+    static partial void RegisterH1a(Dictionary<Type, QuickModel> d);
+    static partial void RegisterH1b(Dictionary<Type, QuickModel> d);
+    static partial void RegisterH1c(Dictionary<Type, QuickModel> d);
+    static partial void RegisterH1d(Dictionary<Type, QuickModel> d);
 }
 
 /// <summary>文字の形を三角形と輪郭にしたもの(同じ文字・大きさは覚えておく)</summary>

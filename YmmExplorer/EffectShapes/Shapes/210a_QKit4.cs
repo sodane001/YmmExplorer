@@ -82,25 +82,6 @@ public abstract class Q4Art : Q3Param
 
     private protected abstract void Art(ArtPen p, float t, float v, float v2);
 
-    /// <summary>専用の3Dモデルがあれば、それを組み立てる(2Dの絵と同じ位置・大きさ・動き)</summary>
-    internal override bool BuildNative3D(in DrawContext c, Native3D n)
-    {
-        if (!UseModel3D || !Models3D.TryGet(GetType(), out var model)) return false;
-        bool scene = Scene;
-        float a = DrawKit.InOut(c, c.F(InTime), c.F(OutTime)) * c.F(Opacity) / 100f;
-        float fov = Math.Clamp(c.F(Fov3D), 1f, 170f) * MathF.PI / 180f;
-        var o = scene ? new Vector2(c.Width / 2f, c.Height / 2f) : P0(c);
-        n.Lit = true; n.Width = c.Width; n.Height = c.Height;
-        n.Cam = c.Height / 2f / MathF.Tan(fov / 2f);
-        n.PivotXY = new Vector2(o.X - c.Width / 2f, c.Height / 2f - o.Y); n.PivotZ = 0f;
-        if (a <= 0.002f) return true;
-        var m = new Sculpt(n, o.X, o.Y, scene ? U0(c) : U(c), a, c.Width, c.Height);
-        m.Font = string.IsNullOrWhiteSpace(Font) ? TextKit.DefaultFont : Font;
-        m.Now = c.Time;
-        float pi = scene ? 1f : MathF.Max(.01f, DrawKit.EaseOutBack(Intro(c, 0f, .4f)));
-        float t = c.Time * Spd(c), v = Amt(c), v2 = Amt2(c);
-        float rot = Gfx.Rad(c.F(Rotation));
-        m.Turn(0, 0, rot, () => m.Scale(0, 0, 0, pi, () => model(this, m, t, v, v2)));
-        return true;
-    }
+    internal override bool SceneForModel => Scene;
+    private protected override bool PopInForModel => !Scene;
 }
