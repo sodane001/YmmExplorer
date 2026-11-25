@@ -93,6 +93,7 @@
     <Compile Include="EffectShapes\Models\Models_F1d.cs" />
     <Compile Include="EffectShapes\Models\Models_F1e.cs" />
     <Compile Include="EffectShapes\Models\Models_F1f.cs" />
+    <Compile Include="EffectShapes\Models\Models_F1g.cs" />
     <Compile Include="EffectShapes\Shape3DRenderer.cs" />
     <Compile Include="EffectShapes\Ymm43DBridge.cs" />
     <Compile Include="EffectShapes\Shapes\01_Rain.cs" />
