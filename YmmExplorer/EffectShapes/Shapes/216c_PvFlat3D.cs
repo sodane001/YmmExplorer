@@ -19,7 +19,7 @@ internal sealed class PvFlat3D
     {
         float k = s.H / 1080f;
         // 白黒の図形は紙の白さをそのまま出したいので、光で暗くしない
-        n.Lit = s.Scene != PvScene.MonoGeo; n.Width = s.W; n.Height = s.H;
+        n.Lit = !PvMono.IsMono(s.Scene); n.Width = s.W; n.Height = s.H;
         n.Cam = s.H * .98f;
         n.PivotXY = Vector2.Zero; n.PivotZ = 400f * k;
         var m = new Sculpt(n, s.W / 2f, s.H / 2f, k, 1f, s.W, s.H) { Seg = 14, Now = s.T };
@@ -88,7 +88,7 @@ internal sealed class PvFlat3D
             case PvScene.Sparkles: Sparkles(); break;
             case PvScene.Ribbons: Ribbons(); break;
             case PvScene.Rays: Rays(); break;
-            case PvScene.MonoGeo: MonoGeo(); break;
+            default: if (PvMono.IsMono(s.Scene)) Seg(12, () => new PvMono(new Ink3D(m, s), s, ex, ey).Run()); break;
         }
     }
 
@@ -770,87 +770,5 @@ internal sealed class PvFlat3D
             }
             m.Ball(o.X, o.Y, o.Z, 240f, V(Vector3.One, .4f));
         });
-    }
-
-    // ---------------------------------------------------------------- v122 白黒の図形(紙の上に、厚みのあるインクの図形を高さ違いで置く)
-    int Step => (int)MathF.Floor(s.T * 2f * MathF.Max(.2f, MathF.Abs(s.Spin)));
-
-    void MonoGeo()
-    {
-        float hw = m.W / 2f, hh = m.H / 2f, lw = 2.6f; int st = Step;
-        bool flip = (s.Seed & 1) != 0;
-        float F(float x) => flip ? -x : x;
-        var ink = V(s.Pal.A, .96f);
-        void Bar(float x0, float y0, float x1, float y1, float z, float w, Vector4 c) => m.Limb(F(x0), y0, z, F(x1), y1, z, w / 2f, w / 2f, c);
-
-        // 紙のざらつき(紙の面にはりついた小さな点)
-        int tick = (int)MathF.Floor(s.T * 12f);
-        for (int i = 0; i < 260; i++)
-        {
-            int id = i * 7 + tick * 7919; float x = (R(id, 0) - .5f) * ex * 2f, y = (R(id, 1) - .5f) * ey * 2f, r = .7f + R(id, 2) * 1.6f;
-            m.Quad3D(new(x - r, y - r, 1f), new(x + r, y - r, 1f), new(x + r, y + r, 1f), new(x - r, y + r, 1f), V(s.Pal.A, .15f + R(id, 3) * .3f));
-        }
-
-        Seg(6, () =>
-        {
-            // × の並び(浮いている。ななめの列ごとに + に回る)
-            for (int r = 0; r < 4; r++)
-                for (int q = 0; q < 6; q++)
-                {
-                    float x = -hw + 92f + q * 114f, y = -hh + 98f + r * 116f, z = 15f, a = (q + r + st) % 6 == 0 ? 0f : MathF.PI / 4f;
-                    float cs = MathF.Cos(a) * z, sn = MathF.Sin(a) * z;
-                    Bar(x - cs, y - sn, x + cs, y + sn, 30f, lw, ink); Bar(x + sn, y - cs, x - sn, y + cs, 30f, lw, ink);
-                }
-
-            // ななめ線入りの四角(ふちは枠、ななめは少し手前)
-            void Boxes(float y, float x0, int n, float shift, int seedRow, float z)
-            {
-                float g = 160f, b = 112f;
-                for (int k = -1; k <= n; k++)
-                {
-                    float x = x0 + k * g - shift;
-                    if (x < x0 - 1f || x > hw + 40f) continue;
-                    int id = k + (int)MathF.Floor(shift / g) + seedRow;
-                    Bar(x, y, x + b, y, z, lw, ink); Bar(x + b, y, x + b, y + b, z, lw, ink); Bar(x + b, y + b, x, y + b, z, lw, ink); Bar(x, y + b, x, y, z, lw, ink);
-                    if ((id + st) % 7 == 0) m.Slab(z, 8f, ink, F(x), y, F(x + b), y + b, F(x), y + b);
-                    else if ((id + st) % 5 == 0) Bar(x + b, y, x, y + b, z + 6f, lw, ink);
-                    else Bar(x, y, x + b, y + b, z + 6f, lw, ink);
-                }
-            }
-            float scroll = Mod(st * 40f + mv, 160f * 64f);
-            Boxes(-hh + 220f, -hw + 792f, 9, scroll, 0, 50f);
-            Boxes(hh - 262f, -hw + 68f, 8, 0f, 31, 50f);
-
-            // ななめ線の平行四辺形
-            {
-                float x0 = -hw + 90f, x1 = -hw + 600f, top = -hh + 510f, bot = -hh + 672f, sk = (bot - top) * .55f, gap = 11f;
-                int n = (int)((x1 - x0) / gap), ph = st % (n / 4 + 8), vis = Math.Min(n, ph * 4);
-                for (int i = 0; i < vis; i++) { float x = x0 + i * gap; Bar(x, bot, x + sk, top, 12f, 1.6f, V(s.Pal.A, .85f)); }
-            }
-
-            // 下の太いななめ線の帯
-            {
-                float top = hh - 105f, g = 46f, o = Mod(mv + s.T * 60f * MathF.Max(.2f, MathF.Abs(s.Spin)), g);
-                for (float x = -ex - g * 3f + o; x < ex + g; x += g) m.Limb(x, ey + 4f, 8f, x + (ey + 4f - top), top, 8f, 1.6f, 1.6f, ink);
-            }
-
-            // 目盛りの輪(いちばん手前で回る)
-            {
-                float cx = hw - 528f, cy = hh - 300f, r = 140f, rot = st * MathF.PI / 18f;
-                for (int i = 0; i < 36; i++)
-                {
-                    if (R(i + st * 3, 7) < .1f) continue;
-                    float a = rot + i * MathF.Tau / 36f, c = MathF.Cos(a), sn = MathF.Sin(a);
-                    Bar(cx + c * r * .8f, cy + sn * r * .8f, cx + c * r * 1.08f, cy + sn * r * 1.08f, 70f, 2f, ink);
-                    m.Ball(F(cx + c * r * .94f), cy + sn * r * .94f, 70f, 4f, ink);
-                }
-            }
-        });
-
-        // 黒い三角の積み重ね(厚い板。拍ごとに1つずつ増える)
-        {
-            float x = hw - 340f, y0 = hh - 520f, w = 90f, h = 92f; int vis = 1 + st % 5;
-            for (int i = 0; i < Math.Min(4, vis); i++) { float y = y0 + i * h * 1.02f; m.Slab(40f, 50f, ink, F(x), y, F(x), y + h, F(x + w), y + h); }
-        }
     }
 }

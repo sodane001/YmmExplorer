@@ -159,7 +159,7 @@ public static class EffectShapeCatalog
         var p = key.Split(':');
         return p[0] switch
         {
-            "Scene" => new PvRecipe(Enum.Parse<PvScene>(p[1]), PvSolid.Mix, PvStyle.FillLine, Enum.Parse<PvScene>(p[1]) == PvScene.MonoGeo ? PvPalette.Paper : PvPalette.Custom).CreateParameter(),
+            "Scene" => new PvRecipe(Enum.Parse<PvScene>(p[1]), PvSolid.Mix, PvStyle.FillLine, PvMono.IsMono(Enum.Parse<PvScene>(p[1])) ? PvPalette.Paper : PvPalette.Custom).CreateParameter(),
             "Solid" => new PvRecipe(PvScene.Float, Enum.Parse<PvSolid>(p[1]), PvStyle.FillLine, PvPalette.Custom).CreateParameter(),
             "Style" => new PvRecipe(PvScene.Tunnel, PvSolid.Mix, Enum.Parse<PvStyle>(p[1]), PvPalette.Custom).CreateParameter(),
             _ => new PvRecipe(PvScene.Wave, PvSolid.Mix, PvStyle.FillLine, Enum.Parse<PvPalette>(p[1])).CreateParameter(),
@@ -577,7 +577,7 @@ public sealed class EffectShapeBrowserVm : NotifyBase, IDisposable
         var p = option.Key.Split(':');
         recipe = p[0] switch
         {
-            "Scene" => Enum.Parse<PvScene>(p[1]) is var sc && sc == PvScene.MonoGeo && recipe.Palette == PvPalette.Custom ? recipe with { Scene = sc, Palette = PvPalette.Paper } : recipe with { Scene = Enum.Parse<PvScene>(p[1]) },
+            "Scene" => Enum.Parse<PvScene>(p[1]) is var sc && PvMono.IsMono(sc) && recipe.Palette == PvPalette.Custom ? recipe with { Scene = sc, Palette = PvPalette.Paper } : recipe with { Scene = Enum.Parse<PvScene>(p[1]) },
             "Solid" => recipe with { Solid = Enum.Parse<PvSolid>(p[1]) },
             "Style" => recipe with { Style = Enum.Parse<PvStyle>(p[1]) },
             _ => recipe with { Palette = Enum.Parse<PvPalette>(p[1]) },

@@ -104,6 +104,13 @@ public enum PvScene
     [Display(Name = "斜めの光")] Rays,
     // v122
     [Display(Name = "白黒の図形")] MonoGeo,
+    // v123 白黒の図形の仲間(216d_PvMono.cs)
+    [Display(Name = "白黒の図形 円")] MonoCircle,
+    [Display(Name = "白黒の図形 線")] MonoLine,
+    [Display(Name = "白黒の図形 格子")] MonoGrid,
+    [Display(Name = "白黒の図形 斜め")] MonoSlash,
+    [Display(Name = "白黒の図形 点")] MonoDots,
+    [Display(Name = "白黒の図形 おまかせ")] MonoRandom,
 }
 
 /// <summary>背景の種類が2Dかどうか(プラグインの外からも使う)</summary>
@@ -321,7 +328,7 @@ public sealed class PvStage3DParameter : EffectShapeParameterBase
             stage.Paint(dc, brush);
         }
         // 白黒の図形は白い紙のままにする(暗くすると、紙が灰色にくすむ)
-        if (Scene != PvScene.MonoGeo) PaintDim(dc, c.Width, c.Height, c.F(CenterDim) / 100f * op, c.F(EdgeDim) / 100f * op);
+        if (!PvMono.IsMono(Scene)) PaintDim(dc, c.Width, c.Height, c.F(CenterDim) / 100f * op, c.F(EdgeDim) / 100f * op);
     }
 
     /// <summary>
