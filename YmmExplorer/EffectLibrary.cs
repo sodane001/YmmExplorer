@@ -1,4 +1,4 @@
-using System.Collections.ObjectModel;
+﻿using System.Collections.ObjectModel;
 using System.IO;
 using System.Text.Json;
 using System.Text.Json.Nodes;
@@ -108,6 +108,12 @@ public sealed class EffectStore
     {
         if (!data.Slots.TryGetValue(slot, out var l)) data.Slots[slot] = l = new();
         return l;
+    }
+
+    /// <summary>すべてのスロットの登録(スロットの番号順)</summary>
+    public List<EffectEntry> Everything()
+    {
+        lock (gate) return data.Slots.OrderBy(kv => kv.Key).SelectMany(kv => kv.Value).ToList();
     }
 
     public IReadOnlyList<EffectEntry> All(int slot)

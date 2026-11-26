@@ -194,14 +194,14 @@
                     <TextBlock Grid.Row="1" Text="{Binding Status}" Foreground="{StaticResource EsAccent}" FontSize="12" TextWrapping="Wrap" Margin="12,2,12,4"
                                Visibility="{Binding HasStatus, Converter={StaticResource EsB2V}}"/>
                     <!-- 映像: サムネイルの並び -->
-                    <ListBox Grid.Row="2" ItemsSource="{Binding Rows}" ItemContainerStyle="{StaticResource EsRowItem}" ItemTemplate="{StaticResource EsRow}"
+                    <ListBox Grid.Row="2" ItemsSource="{Binding Rows}" ItemContainerStyle="{StaticResource EsRowItem}" Foreground="{StaticResource EsText}" ItemTemplate="{StaticResource EsRow}"
                              Background="Transparent" BorderThickness="0" Margin="6,0,2,6"
                              Visibility="{Binding IsVideo, Converter={StaticResource EsB2V}}"
                              ScrollViewer.HorizontalScrollBarVisibility="Disabled" ScrollViewer.CanContentScroll="True"
                              VirtualizingPanel.IsVirtualizing="True" VirtualizingPanel.VirtualizationMode="Recycling" VirtualizingPanel.ScrollUnit="Pixel"
                              SizeChanged="RowList_SizeChanged"/>
                     <!-- 音声: 名前と説明の一覧 -->
-                    <ListBox Grid.Row="2" ItemsSource="{Binding ListItems}" ItemContainerStyle="{StaticResource EsRowItem}" ItemTemplate="{StaticResource FxLine}"
+                    <ListBox Grid.Row="2" ItemsSource="{Binding ListItems}" ItemContainerStyle="{StaticResource EsRowItem}" Foreground="{StaticResource EsText}" ItemTemplate="{StaticResource FxLine}"
                              Background="Transparent" BorderThickness="0" Margin="6,0,2,6"
                              Visibility="{Binding IsAudio, Converter={StaticResource EsB2V}}"
                              ScrollViewer.HorizontalScrollBarVisibility="Disabled" ScrollViewer.CanContentScroll="True"

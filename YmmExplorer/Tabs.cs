@@ -1,4 +1,4 @@
-using System.ComponentModel;
+﻿using System.ComponentModel;
 using System.Windows;
 
 namespace YmmExplorer;
@@ -262,7 +262,7 @@ public static class TabGroups
         s => s.AudioEffectTabNames, plainFirstName: true);
 
     public static TabGroup Text { get; } = new(TabKind.Text, "テキスト",
-        s => s.TextTabCount, (s, v) => s.TextTabCount = v,
+        s => 1, (s, v) => { },
         s => s.TextTabConfigs, (s, v) => s.TextTabConfigs = v,
         s => s.TextTabNames, plainFirstName: true);
 

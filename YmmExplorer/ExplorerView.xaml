@@ -1,4 +1,4 @@
-<UserControl x:Class="YmmExplorer.ExplorerView"
+﻿<UserControl x:Class="YmmExplorer.ExplorerView"
              xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:local="clr-namespace:YmmExplorer"
@@ -2682,8 +2682,12 @@
             </Grid>
         </Grid>
 
-        <!-- ===== テキストタブ ===== -->
-        <Grid Grid.Row="1" Visibility="{Binding ShowTextView, Converter={StaticResource B2V}}">
+        <!-- ===== テキストタブ(標準のテンプレート。演出図形タブと同じ形) ===== -->
+        <local:TextBrowserView Grid.Row="1" DataContext="{Binding TextBrowser}"
+                               Visibility="{Binding DataContext.ShowTextView, RelativeSource={RelativeSource AncestorType=UserControl}, Converter={StaticResource B2V}}"/>
+
+        <!-- 前の「テキスト」タブ(自分で追加する方式)。v140 から使わない -->
+        <Grid Grid.Row="1" Visibility="Collapsed">
             <Grid DataContext="{Binding TextLib}">
                 <Grid.RowDefinitions>
                     <RowDefinition Height="Auto"/>
@@ -5371,7 +5375,7 @@
                         </StackPanel>
                     </Border>
 
-                    <Border Background="{StaticResource Panel}" CornerRadius="10" Padding="18" Margin="0,0,0,14">
+                    <Border Visibility="Collapsed" Background="{StaticResource Panel}" CornerRadius="10" Padding="18" Margin="0,0,0,14">
                         <StackPanel>
                             <TextBlock Text="テキストのタブ" FontWeight="SemiBold" Margin="0,0,0,4"/>
                             <TextBlock Text="YMM4のテキストアイテムを、書式ごと保存しておく場所です。タブごとに別々に保存されます。隠したタブ・減らしたタブの中身は消えません。"

@@ -1,4 +1,4 @@
-using System.IO;
+﻿using System.IO;
 using System.Text.Json;
 
 namespace YmmExplorer;
@@ -225,6 +225,13 @@ public sealed class ExplorerSettings
     public bool VideoEffectAppend { get; set; } = true;
     /// <summary>エフェクトタブで、映像エフェクトのサムネイルに使うサンプル画像(空欄なら同梱の絵)</summary>
     public string FxSampleImage { get; set; } = "";
+
+    /// <summary>テキストタブのお気に入り(テンプレートの ID)</summary>
+    public List<string>? TextFavorites { get; set; }
+    /// <summary>テキストタブで、選択中のテキストに適用する時に文字の大きさも変える</summary>
+    public bool TextTplWithSize { get; set; }
+    /// <summary>テキストタブでテンプレートを使う時: 0=新しいテキストを作る 1=選択中のテキストに適用する</summary>
+    public int TextTplMode { get; set; }
 
     /// <summary>音声エフェクトのまとまりを、選択中のアイテムのエフェクトに追加する(オフなら、既存のエフェクトをすべて削除してから追加する)</summary>
     public bool AudioEffectAppend { get; set; } = true;

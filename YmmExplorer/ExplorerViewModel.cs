@@ -1,4 +1,4 @@
-using System.Collections.ObjectModel;
+﻿using System.Collections.ObjectModel;
 using System.Collections.Specialized;
 using System.ComponentModel;
 using System.Diagnostics;
@@ -722,6 +722,7 @@ public class ExplorerViewModel : NotifyBase, IDisposable
         Materials = new MaterialLibraryVm();
         EffectShapes = new EffectShapeBrowserVm(PlaceShapeByKeyAsync, PlacePvRecipeAsync, settings.IsShapeShown);
         FxBrowser = new FxBrowserVm(settings);
+        TextBrowser = new TextBrowserVm(settings);
         _ = FxCatalog.EnsureAsync(settings.FxSampleImage ?? "");     // 初回だけ、サンプル画像にエフェクトをかけたサムネイルを作る
         _ = EffectShapeCatalog.EnsureAsync();       // 初回だけ、全図形のサムネイルを作ってプラグインフォルダーに保存する
         ItemEditor = new ItemEditorVm(() => ShowItemView);
@@ -842,6 +843,7 @@ public class ExplorerViewModel : NotifyBase, IDisposable
         TextLib.Dispose();
         EffectShapes.Dispose();
         FxBrowser.Dispose();
+        TextBrowser.Dispose();
         foreach (var g in TabGroups.All) g.TabsChanged -= OnTabsChanged;
         WindowTabs.Changed -= OnTabsChanged;
         foreach (var list in TabToggles.Values) foreach (var t in list) t.Detach();
@@ -1043,6 +1045,8 @@ public class ExplorerViewModel : NotifyBase, IDisposable
     public EffectShapeBrowserVm EffectShapes { get; }
     /// <summary>エフェクトタブ(同梱の演出エフェクト)</summary>
     public FxBrowserVm FxBrowser { get; }
+    /// <summary>テキストタブ(標準のテンプレート)</summary>
+    public TextBrowserVm TextBrowser { get; }
     public bool IsEffectShapeTab => selectedKind == TabKind.EffectShape;
     public bool ShowEffectShapeView => IsEffectShapeTab && !isSettingsPageOpen;
     public bool ShowExplorerView => IsExplorerTab && !isSettingsPageOpen;
@@ -1106,7 +1110,7 @@ public class ExplorerViewModel : NotifyBase, IDisposable
             case TabKind.EffectShape: EffectShapes.Refresh(); break;
             case TabKind.VideoEffect: FxBrowser.Refresh(); break;
             case TabKind.AudioEffect: AudioFx.Reload(); break;
-            case TabKind.Text: TextLib.Reload(); break;
+            case TabKind.Text: TextBrowser.Refresh(); break;
             case TabKind.YmmSettings:
                 if (YmmSettingGroups.Count == 0) LoadYmmSettings();
                 break;
