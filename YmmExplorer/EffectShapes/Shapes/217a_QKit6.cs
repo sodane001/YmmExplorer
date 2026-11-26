@@ -1,4 +1,4 @@
-using Vortice.Mathematics;
+﻿using Vortice.Mathematics;
 using SharedDataStore = YukkuriMovieMaker.Project.SharedDataStore;
 
 namespace YMM4EffectShapes;
@@ -19,7 +19,7 @@ public abstract partial class Q6Art : Q4Art
     protected override string[] Use => kind switch
     {
         0 => ["Color1=地の色", "Color2=模様の色", "Speed=流れる速さ"],
-        1 or 8 or 9 or 10 or 11 or 12 or 16 or 21 or 22 or 23 => ["Color1=メインの色", "Color2=サブの色", "Speed=動く速さ"],
+        1 or 8 or 9 or 10 or 11 or 12 or 16 or 21 or 22 or 23 or 28 or 29 or 31 or 34 => ["Color1=メインの色", "Color2=サブの色", "Speed=動く速さ"],
         15 => ["Color1=枠の色", "Color2=サブの色", "Speed=動く速さ"],
         _ => ["Text=文字", "Color1=メインの色", "Color2=サブの色", "Speed=動く速さ"],
     };
@@ -53,6 +53,7 @@ public abstract partial class Q6Art : Q4Art
             case 21: Person(p, t, C, D); break;
             case 22: Diagram(p, t, C, D, K, W); break;
             case 23: WeatherMark(p, t, C, D, W); break;
+            default: Art8(p, t, C, D, K, W, s); break;
         }
     }
 

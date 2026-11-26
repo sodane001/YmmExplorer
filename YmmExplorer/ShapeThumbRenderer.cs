@@ -184,6 +184,8 @@ public static class ShapeThumbRenderer
         try { devices?.Dispose(); } catch { }
         context = null;
         devices = null;
+        // 同じアドレスに新しい道具ができても、前の道具で作ったパスを使わないようにする
+        GeoKit.Reset();
     }
 
     static BitmapSource? RenderGeneric(object param)

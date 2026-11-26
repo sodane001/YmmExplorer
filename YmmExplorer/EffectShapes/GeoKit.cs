@@ -41,6 +41,24 @@ namespace YMM4EffectShapes
 
         static bool Ok() { failures = 0; return true; }
 
+        /// <summary>
+        /// 描画の道具(デバイス)を作り直した時に上げる番号。作り直すと、前と同じアドレスに新しい道具ができることがあり、
+        /// アドレスだけで覚えたパスを使うと、別の道具のパスで描くことになって絵が出なくなる。番号も合わせて覚える
+        /// </summary>
+        public static int Epoch => epoch;
+        static int epoch;
+
+        /// <summary>描画の道具を捨てた時に呼ぶ(このスレッドの道具を捨て、覚えたパスも使わないようにする)</summary>
+        public static void Reset()
+        {
+            Interlocked.Increment(ref epoch);
+            try { roundStroke?.Dispose(); } catch { }
+            try { factory?.Dispose(); } catch { }
+            roundStroke = null; factory = null; factoryOwner = IntPtr.Zero;
+            glowStops = null; glowOwner = IntPtr.Zero; glowBroken = false;
+            broken = false; failures = 0;
+        }
+
         [ThreadStatic] static Dictionary<uint, ID2D1GradientStopCollection>? glowStops;
         [ThreadStatic] static IntPtr glowOwner;
         [ThreadStatic] static bool glowBroken;

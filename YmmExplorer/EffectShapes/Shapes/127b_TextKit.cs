@@ -57,14 +57,14 @@ internal sealed class TextShape
     }
 
     // 形のパス(描画を軽くするため、一度作ったら使い回す。Direct2D のファクトリーごと)
-    readonly Dictionary<IntPtr, ID2D1PathGeometry> geos = new();
+    readonly Dictionary<(IntPtr, int), ID2D1PathGeometry> geos = new();
 
     internal ID2D1PathGeometry? Geometry(ID2D1DeviceContext dc)
     {
         if (!GeoKit.Enabled || Contours.Count == 0) return null;
         var f = GeoKit.FactoryOf(dc);
         if (f == null) return null;
-        var key = f.NativePointer;
+        var key = (f.NativePointer, GeoKit.Epoch);
         lock (geos)
         {
             if (geos.TryGetValue(key, out var g)) return g;
