@@ -1,4 +1,4 @@
-using System.Numerics;
+﻿using System.Numerics;
 
 namespace YMM4EffectShapes;
 
@@ -273,13 +273,11 @@ internal static partial class Models3D
             m.Ball(0, 0, 0, 42, D);
             m.Ball(0, 0, 0, 90, 70, 30, m.C(D, .25f));
         });
-        // ゲーム サイコロ: 本物の立方体(上に赤い1、左右に3と2の目)
+        // ゲーム サイコロ: 本物の立方体(6つの面に1〜6の目。上が赤い1)
         Icon(d, typeof(S966Parameter), (m, t, C, D) => m.Pitch(0, 0, 0, -.55f, () => m.Yaw(0, 0, 0, .7854f, () =>
         {
             m.Box(0, 0, 0, 300, 300, 300, C, .14f);
-            m.Ball(0, -152, 0, 40, 8, 40, D);
-            foreach (var (a, b) in new[] { (-80f, -80f), (0f, 0f), (80f, 80f) }) m.Ball(a, b, 152, 22, 22, 6, K);
-            foreach (var (a, b) in new[] { (-70f, 70f), (70f, -70f) }) m.Ball(-152, b, a, 6, 22, 22, K);
+            DiePips(m, 0, 0, 0, 150, 3, 1, K, D);
         })));
         // ゲーム トランプ: 薄いカード、浮き出た赤いハート、すみの文字
         Icon(d, typeof(S967Parameter), (m, t, C, D) =>

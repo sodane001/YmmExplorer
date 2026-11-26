@@ -80,6 +80,28 @@ public enum PvScene
     [Display(Name = "紙吹雪")] Confetti,
     [Display(Name = "ハーフトーン")] Halftone,
     [Display(Name = "光のカーテン")] Curtain,
+    // ここから v121 で足した3Dの背景(保存した番号が変わらないよう、いちばん後ろに足す)
+    [Display(Name = "ドミノ")] Domino,
+    [Display(Name = "噴水")] Fountain,
+    [Display(Name = "竜巻")] Tornado,
+    [Display(Name = "柱の森")] Pillars,
+    [Display(Name = "格子の空間")] Lattice,
+    [Display(Name = "観覧車")] Wheel,
+    [Display(Name = "立体の滝")] Waterfall,
+    [Display(Name = "振り子")] Pendulum,
+    [Display(Name = "花の輪")] Flower,
+    [Display(Name = "立体のハート")] Heart,
+    // ここから v121 で足した2Dの背景
+    [Display(Name = "星空")] Stars,
+    [Display(Name = "泡")] Bubbles,
+    [Display(Name = "雪")] Snow,
+    [Display(Name = "花火")] Fireworks,
+    [Display(Name = "チェック柄")] Plaid,
+    [Display(Name = "ジグザグ")] Zigzag,
+    [Display(Name = "浮かぶハート")] Hearts,
+    [Display(Name = "キラキラ")] Sparkles,
+    [Display(Name = "リボン")] Ribbons,
+    [Display(Name = "斜めの光")] Rays,
 }
 
 /// <summary>背景の種類が2Dかどうか(プラグインの外からも使う)</summary>
@@ -644,6 +666,16 @@ internal sealed class PvStage(PvStage.Setup s)
             case PvScene.Cave: Cave(); break;
             case PvScene.Shards: Shards(); break;
             case PvScene.Nest: Nest(); break;
+            case PvScene.Domino: Domino(); break;
+            case PvScene.Fountain: Fountain(); break;
+            case PvScene.Tornado: Tornado(); break;
+            case PvScene.Pillars: Pillars(); break;
+            case PvScene.Lattice: Lattice(); break;
+            case PvScene.Wheel: Wheel(); break;
+            case PvScene.Waterfall: Waterfall(); break;
+            case PvScene.Pendulum: Pendulum(); break;
+            case PvScene.Flower: Flower(); break;
+            case PvScene.Heart: Heart(); break;
             default: Float(); break;
         }
         faces.Sort(static (a, b) => b.Z.CompareTo(a.Z));
@@ -1150,6 +1182,143 @@ internal sealed class PvStage(PvStage.Setup s)
                 Add(PvMesh.Cube, Vector3.Transform(new Vector3(0, x * sz, y * sz), rot) + c, rot, new(h, e, e), col);
             }
             if (j == 0) Add(MeshOf(0), c, rot, Shape(sz * .68f), s.Pal.C);
+        }
+    }
+
+    // ---------------------------------------------------------------- v121 で足した並び方
+    float SpinAbs => MathF.Max(.25f, MathF.Abs(s.Spin));
+
+    void Domino()
+    {
+        Tilt(.32f, 3.2f);
+        const float D = 36f; int n = Math.Clamp(s.N / 3, 12, 70); float gap = D / n, off = Mod(s.Dist, gap), sz = MathF.Max(.4f, s.Size);
+        int r0 = (int)MathF.Floor(s.Dist / gap);
+        foreach (int side in new[] { -1, 1 })
+            for (int j = 0; j < n; j++)
+            {
+                int id = j + r0; float z = 1f + j * gap - off, x = side * (3.6f + MathF.Sin(id * .35f) * 1.4f) * s.Spread;
+                float w = Mod(s.T * SpinAbs * 6f - id * .5f, 14f), fall = Math.Clamp(w / 1.2f, 0f, 1f) * (w < 10f ? 1f : Math.Clamp((14f - w) / 4f, 0f, 1f)) * 1.25f;
+                float h = 1.1f * sz; var rot = AxisX(-fall);
+                Add(PvMesh.Cube, new Vector3(x, -2.6f, z) + Vector3.Transform(new Vector3(0, h, 0), rot), rot, new(.7f * sz, h, .12f), Pick(id * 2 + (side > 0 ? 1 : 0)));
+            }
+    }
+
+    void Fountain()
+    {
+        Tilt(.18f, 2.4f);
+        int n = Math.Clamp(s.N, 20, 400); const float L = 3.2f;
+        for (int src = 0; src < 3; src++) Add(PvMesh.Cube, new((src - 1) * 7f * s.Spread, -3.2f, 16f + (src == 1 ? 6f : 0f)), Quaternion.Identity, new(1.7f, .3f, 1.7f), s.Pal.C);
+        for (int i = 0; i < n; i++)
+        {
+            int src = i % 3; float bx = (src - 1) * 7f * s.Spread, bz = 16f + (src == 1 ? 6f : 0f);
+            float ph = Mod(R(i, 0) * L + s.T * SpinAbs, L), a = R(i, 1) * MathF.Tau, sp = 1.2f + R(i, 2) * 1.4f;
+            var p = new Vector3(bx + MathF.Cos(a) * sp * ph, -3f + ph * 7.5f - ph * ph * 2.3f, bz + MathF.Sin(a) * sp * ph);
+            Add(MeshOf(i), Push(p), Tumble(i), Shape((.16f + R(i, 3) * .22f) * s.Size), Pick(i));
+        }
+    }
+
+    void Tornado()
+    {
+        int n = Math.Clamp(s.N * 2, 40, 400); var c = new Vector3(0, 0, 17f);
+        for (int i = 0; i < n; i++)
+        {
+            float u = Mod(R(i, 0) + s.T * .05f * SpinAbs + s.Dist * .01f, 1f), y = -6.5f + u * 13f, r = (.6f + u * u * 7f) * s.Spread;
+            float a = R(i, 1) * MathF.Tau + s.T * s.Spin * (2.2f - u * 1.2f);
+            Add(MeshOf(i), Push(c + new Vector3(MathF.Cos(a) * r, y, MathF.Sin(a) * r)), Tumble(i), Shape((.25f + u * .45f) * s.Size), Ramp(u));
+        }
+    }
+
+    void Pillars()
+    {
+        Tilt(.05f, .6f);
+        const float D = 40f; int n = Math.Clamp(s.N / 2, 10, 120); float hole = 2.2f + s.Clear * 2f;
+        for (int i = 0; i < n; i++)
+        {
+            float z = Mod(i * D / n + R(i, 0) * 2f - s.Dist, D) + 1f, x = (R(i, 1) - .5f) * 26f * s.Spread;
+            if (MathF.Abs(x) < hole) x += x < 0f ? -hole : hole;
+            float w0 = (.35f + R(i, 2) * .4f) * MathF.Max(.4f, s.Size); var rot = AxisY(R(i, 3) * 3f + s.T * s.Spin * .2f);
+            Add(BlockOf(i), new(x, 0, z), rot, new(w0, 7f, w0), Pick(i));
+            Add(PvMesh.Cube, new(x, -6f + Mod(s.T * 1.5f + R(i, 4) * 12f, 12f), z), rot, new(w0 * 1.3f, .12f, w0 * 1.3f), s.Pal.C);
+        }
+    }
+
+    void Lattice()
+    {
+        float g = 3.2f * s.Spread, off = Mod(s.Dist, g); int k0 = (int)MathF.Floor(s.Dist / g);
+        const int nx = 3, ny = 2, nz = 10;
+        var beam = s.Pal.C * .75f;
+        for (int k = 0; k < nz; k++)
+            for (int j = -ny; j <= ny; j++)
+                for (int i = -nx; i <= nx; i++)
+                {
+                    var p = new Vector3(i * g, j * g, 1f + k * g - off); int id = i * 31 + j * 977 + (k + k0) * 7919;
+                    if (i < nx) Add(PvMesh.Cube, p + new Vector3(g / 2f, 0, 0), Quaternion.Identity, new(g / 2f, .03f, .03f), beam);
+                    if (j < ny) Add(PvMesh.Cube, p + new Vector3(0, g / 2f, 0), Quaternion.Identity, new(.03f, g / 2f, .03f), beam);
+                    if (i == 0 && j == 0) continue;
+                    Add(MeshOf(id), p, Tumble(id), Shape(.24f * s.Size * (1f + MathF.Sin(s.T * 2f + id) * .15f)), Pick(id));
+                }
+    }
+
+    void Wheel()
+    {
+        var c = new Vector3(0, 0, 22f); float r = 9f * s.Spread, a0 = s.T * s.Spin * .3f + s.Dist * .05f; int n = Math.Clamp(s.N / 4, 8, 40);
+        float half = MathF.PI / n;
+        for (int k = 0; k < n; k++)
+        {
+            float a = a0 + k * MathF.Tau / n, b = a + half; var p = c + new Vector3(MathF.Cos(a) * r, MathF.Sin(a) * r, 0);
+            Add(PvMesh.Cube, (c + p) * .5f, AxisZ(a), new(r * .5f, .06f, .06f), s.Pal.C * .8f);
+            Add(PvMesh.Cube, c + new Vector3(MathF.Cos(b), MathF.Sin(b), 0) * r * MathF.Cos(half), AxisZ(b + MathF.PI / 2f), new(r * MathF.Sin(half), .1f, .1f), s.Pal.A);
+            Add(s.Solid == PvSolid.Mix ? PvMesh.Cube : MeshOf(k), p + new Vector3(0, -.85f, 0), AxisY(MathF.Sin(s.T + k) * .3f), Shape(.6f * s.Size), Pick(k));
+        }
+        Add(PvMesh.Icosa, c, AxisZ(a0), new(1.2f), s.Pal.B);
+        Add(PvMesh.Cube, c + new Vector3(-3f, -6f, 0), AxisZ(-.35f), new(.18f, 6.5f, .18f), s.Pal.C * .6f);
+        Add(PvMesh.Cube, c + new Vector3(3f, -6f, 0), AxisZ(.35f), new(.18f, 6.5f, .18f), s.Pal.C * .6f);
+    }
+
+    void Waterfall()
+    {
+        int n = Math.Clamp(s.N, 20, 400); const float H = 16f;
+        for (int k = -6; k <= 6; k++) Add(PvMesh.Cube, new(k * 2.6f * s.Spread, -8.4f + MathF.Sin(s.T * 2f + k) * .2f, 27f), Quaternion.Identity, new(1.25f * s.Spread, .2f, 5f), s.Pal.C * .8f);
+        for (int i = 0; i < n; i++)
+        {
+            float x = (R(i, 0) - .5f) * 30f * s.Spread, z = 22f + R(i, 1) * 10f, y = 8f - Mod(R(i, 2) * H + s.T * (3f + R(i, 3) * 3f) * SpinAbs, H);
+            Add(MeshOf(i), new(x, y, z), Tumble(i), Shape((.2f + R(i, 4) * .3f) * s.Size), Ramp(R(i, 5)));
+        }
+    }
+
+    void Pendulum()
+    {
+        int n = Math.Clamp(s.N / 6, 6, 30); float span = 26f * s.Spread, top = 7f, z = 18f;
+        Add(PvMesh.Cube, new(0, top, z), Quaternion.Identity, new(span * .55f, .15f, .15f), s.Pal.C);
+        for (int k = 0; k < n; k++)
+        {
+            float x = (k - (n - 1) / 2f) * span / n, len = 7f + k * .25f, a = MathF.Sin(s.T * SpinAbs * (1.6f + k * .06f)) * .7f;
+            var dir = new Vector3(0, -MathF.Cos(a), MathF.Sin(a)); var pivot = new Vector3(x, top, z);
+            Add(PvMesh.Cube, pivot + dir * len * .5f, AxisX(-a), new(.04f, len * .5f, .04f), s.Pal.C);
+            Add(s.Solid == PvSolid.Mix ? PvMesh.Icosa : MeshOf(k), pivot + dir * len, Tumble(k), Shape(.55f * s.Size), Pick(k));
+        }
+    }
+
+    void Flower()
+    {
+        var c = new Vector3(0, 0, 18f); int n = Math.Clamp(s.N * 2, 60, 400), petals = 5 + (s.Seed & 3); float r0 = 8f * s.Spread, spin = s.T * s.Spin * .25f;
+        for (int i = 0; i < n; i++)
+        {
+            float a = i * MathF.Tau / n, r = r0 * MathF.Abs(MathF.Cos(petals * .5f * a)) * (1f + MathF.Sin(s.T * 1.5f + a * 3f) * .05f);
+            var p = c + new Vector3(MathF.Cos(a + spin) * r, MathF.Sin(a + spin) * r, MathF.Sin(a * petals + s.T) * 1.2f);
+            Add(MeshOf(i), Push(p), Tumble(i), Shape(.4f * s.Size), Ramp(r / r0));
+        }
+    }
+
+    void Heart()
+    {
+        var c = new Vector3(0, .5f, 18f); int n = Math.Clamp(s.N * 2, 60, 400); float sc = .42f * s.Spread, beat = 1f + s.Flash * .15f + MathF.Sin(s.T * 3f) * .04f;
+        var rot = AxisY(s.T * s.Spin * .4f + s.Dist * .05f);
+        for (int i = 0; i < n; i++)
+        {
+            float a = i * MathF.Tau / n, layer = (i % 3 - 1) * 1.2f;
+            float hx = 16f * MathF.Pow(MathF.Sin(a), 3), hy = 13f * MathF.Cos(a) - 5f * MathF.Cos(2 * a) - 2f * MathF.Cos(3 * a) - MathF.Cos(4 * a);
+            Add(MeshOf(i), c + Vector3.Transform(new Vector3(hx * sc, hy * sc, layer) * beat, rot), Tumble(i), Shape(.36f * s.Size), i % 3 == 1 ? s.Pal.A : Pick(i));
         }
     }
 

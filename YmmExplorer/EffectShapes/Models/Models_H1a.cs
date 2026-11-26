@@ -1,4 +1,4 @@
-using System.Globalization;
+﻿using System.Globalization;
 using System.Numerics;
 
 namespace YMM4EffectShapes;
@@ -471,7 +471,7 @@ internal static partial class Models3D
                 m.Pitch(x, 0, 0, spin + (dd * .3f), () => m.Yaw(x, 0, 0, spin * .7f + .4f, () =>
                 {
                     m.Box(x, 0, 0, 200, 200, 200, m.C(p.Color1), .2f);
-                    Pips(m, x, 0, 101, face, m.C(p.Color2));
+                    DiePips(m, x, 0, 0, 100, face, face is 1 or 6 ? 2 : 1, m.C(p.Color2), m.C(p.Color2));
                 }));
             }
         });
@@ -525,19 +525,43 @@ internal static partial class Models3D
         });
     }
 
-    /// <summary>サイコロの目(手前の面に、玉のくぼみ)</summary>
-    static void Pips(Sculpt m, float cx, float cy, float z, int face, Vector4 col)
+    /// <summary>
+    /// サイコロの6面すべてに目を付ける(向かい合う面の合計は7)。
+    /// (x,y,z)=立方体のまん中、half=辺の半分、front=手前の面の目、top=上の面の目。1の目だけ oneCol で大きめ
+    /// </summary>
+    internal static void DiePips(Sculpt m, float x, float y, float z, float half, int front, int top, Vector4 col, Vector4 oneCol)
     {
-        float o = 55;
-        (float, float)[] at = face switch
+        front = Math.Clamp(front, 1, 6); top = Math.Clamp(top, 1, 6);
+        if (top == front || top == 7 - front) top = front is 1 or 6 ? 2 : 1;
+        int right = Enumerable.Range(1, 6).First(f => f != front && f != 7 - front && f != top && f != 7 - top);
+        var c = new Vector3(x, y, z); float e = half + 1f;
+        // 面: まん中・面の横向き・面の縦向き・外向き(y は下向き)
+        Face(front, c + new Vector3(0, 0, e), Vector3.UnitX, Vector3.UnitY, Vector3.UnitZ);
+        Face(7 - front, c - new Vector3(0, 0, e), -Vector3.UnitX, Vector3.UnitY, -Vector3.UnitZ);
+        Face(top, c - new Vector3(0, e, 0), Vector3.UnitX, Vector3.UnitZ, -Vector3.UnitY);
+        Face(7 - top, c + new Vector3(0, e, 0), Vector3.UnitX, -Vector3.UnitZ, Vector3.UnitY);
+        Face(right, c + new Vector3(e, 0, 0), -Vector3.UnitZ, Vector3.UnitY, Vector3.UnitX);
+        Face(7 - right, c - new Vector3(e, 0, 0), Vector3.UnitZ, Vector3.UnitY, -Vector3.UnitX);
+
+        void Face(int f, Vector3 fc, Vector3 u, Vector3 v, Vector3 nrm)
         {
-            1 => [(0, 0)],
-            2 => [(-o, -o), (o, o)],
-            3 => [(-o, -o), (0, 0), (o, o)],
-            4 => [(-o, -o), (o, -o), (-o, o), (o, o)],
-            5 => [(-o, -o), (o, -o), (0, 0), (-o, o), (o, o)],
-            _ => [(-o, -o), (o, -o), (-o, 0), (o, 0), (-o, o), (o, o)],
-        };
-        foreach (var (x, y) in at) m.Ball(cx + x, cy + y, z, face == 1 ? 30 : 18, face == 1 ? 30 : 18, 6, col);
+            float o = half * .5f, r = f == 1 ? half * .27f : half * .16f;
+            (float, float)[] at = f switch
+            {
+                1 => [(0, 0)],
+                2 => [(-o, -o), (o, o)],
+                3 => [(-o, -o), (0, 0), (o, o)],
+                4 => [(-o, -o), (o, -o), (-o, o), (o, o)],
+                5 => [(-o, -o), (o, -o), (0, 0), (-o, o), (o, o)],
+                _ => [(-o, -o), (o, -o), (-o, 0), (o, 0), (-o, o), (o, o)],
+            };
+            float flat = r * .22f;
+            float rx = MathF.Abs(nrm.X) > .5f ? flat : r, ry = MathF.Abs(nrm.Y) > .5f ? flat : r, rz = MathF.Abs(nrm.Z) > .5f ? flat : r;
+            foreach (var (a, b) in at)
+            {
+                var q = fc + u * a + v * b;
+                m.Ball(q.X, q.Y, q.Z, rx, ry, rz, f == 1 ? oneCol : col);
+            }
+        }
     }
 }

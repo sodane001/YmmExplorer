@@ -77,6 +77,16 @@ internal sealed class PvFlat3D
             case PvScene.Confetti: Confetti(); break;
             case PvScene.Halftone: Halftone(); break;
             case PvScene.Curtain: Curtain(); break;
+            case PvScene.Stars: Stars(); break;
+            case PvScene.Bubbles: Bubbles(); break;
+            case PvScene.Snow: Snow(); break;
+            case PvScene.Fireworks: Fireworks(); break;
+            case PvScene.Plaid: Plaid(); break;
+            case PvScene.Zigzag: Zigzag(); break;
+            case PvScene.Hearts: Hearts(); break;
+            case PvScene.Sparkles: Sparkles(); break;
+            case PvScene.Ribbons: Ribbons(); break;
+            case PvScene.Rays: Rays(); break;
         }
     }
 
@@ -578,5 +588,185 @@ internal sealed class PvFlat3D
                 m.Box(x - 12f, y - h / 2f - 2f, z - 20f, w, 3f, 3f, V(s.Pal.B, .85f), .1f);
             }
         }
+    }
+
+    // ---------------------------------------------------------------- v121 で足した背景
+    float SpinT => s.T * MathF.Max(.2f, MathF.Abs(s.Spin));
+
+    void Stars()
+    {
+        int n = Math.Clamp(s.N * 3, 40, 700);
+        Seg(8, () =>
+        {
+            for (int i = 0; i < n; i++)
+            {
+                float z = 100f - R(i, 6) * 1300f, f = D(z);
+                float x0 = (Fr(R(i, 0) + mv * .00005f * (.3f + R(i, 3))) - .5f) * ex * 2f, y0 = (R(i, 1) - .5f) * ey * 2f, tw = .35f + .65f * MathF.Abs(MathF.Sin(t * (1f + R(i, 4) * 2f) + i));
+                float r = (1.6f + R(i, 2) * R(i, 2) * 4f) * s.Size * f, x = x0 * f, y = y0 * f;
+                m.Ball(x, y, z, r * 2.6f, V(Pick(i), .16f * tw));
+                m.Ball(x, y, z, r, V(Vector3.Lerp(Pick(i), Vector3.One, .7f), tw));
+                if (R(i, 5) > .94f)
+                {
+                    m.Limb(x - r * 7f, y, z, x + r * 7f, y, z, r * .25f, r * .25f, V(Vector3.One, .6f * tw));
+                    m.Limb(x, y - r * 7f, z, x, y + r * 7f, z, r * .25f, r * .25f, V(Vector3.One, .6f * tw));
+                }
+            }
+        });
+    }
+
+    void Bubbles()
+    {
+        int n = Math.Clamp(s.N, 12, 200); float h = ey * 2f + 200f;
+        Seg(16, () =>
+        {
+            for (int i = 0; i < n; i++)
+            {
+                float z = 60f - R(i, 6) * 900f, f = D(z);
+                float r = (10f + R(i, 2) * R(i, 2) * 60f) * s.Size * f, y0 = ey + 100f - Mod(R(i, 1) * h + (mv * .5f + t * 60f) * (.4f + R(i, 3)), h), x0 = (R(i, 0) - .5f) * ex * 2.1f + MathF.Sin(t * 1.2f + i) * 20f;
+                float a = .7f * Calm(x0, y0), x = x0 * f, y = y0 * f;
+                m.Ball(x, y, z, r, V(Vector3.Lerp(Pick(i), Vector3.One, .3f), a * .28f));
+                m.Ball(x - r * .38f, y - r * .38f, z + r * .8f, r * .18f, V(Vector3.One, a));
+            }
+        });
+    }
+
+    void Snow()
+    {
+        int n = Math.Clamp(s.N * 3, 30, 600); float h = ey * 2f + 60f;
+        Seg(8, () =>
+        {
+            for (int i = 0; i < n; i++)
+            {
+                float z = 80f - R(i, 6) * 1000f, f = D(z);
+                float y0 = -ey - 30f + Mod(R(i, 1) * h + (mv * .4f + t * 46f) * (.4f + R(i, 2)), h), x0 = (R(i, 0) - .5f) * ex * 2.1f + MathF.Sin(t * .8f + i) * 30f, r = (2.4f + R(i, 3) * R(i, 3) * 8f) * s.Size * f;
+                float x = x0 * f, y = y0 * f;
+                var c = V(Vector3.Lerp(Pick(i), Vector3.One, .75f), (.6f + R(i, 4) * .4f) * MathF.Max(.6f, Calm(x0, y0)));
+                if (R(i, 5) > .93f)
+                {
+                    float rr = r * 3.4f, a0 = t * .5f + i;
+                    m.Move(x, y, z, () => m.Yaw(0, 0, 0, a0 * .7f, () =>
+                    {
+                        for (int k = 0; k < 3; k++) { float a = a0 + k * MathF.PI / 3f; m.Limb(-MathF.Cos(a) * rr, -MathF.Sin(a) * rr, 0, MathF.Cos(a) * rr, MathF.Sin(a) * rr, 0, r * .35f, r * .35f, c); }
+                    }));
+                }
+                else m.Ball(x, y, z, r, c);
+            }
+        });
+    }
+
+    void Fireworks()
+    {
+        int n = Math.Clamp(s.N / 10, 3, 12);
+        Seg(6, () =>
+        {
+            for (int i = 0; i < n; i++)
+            {
+                float per = 2.4f + R(i, 0) * 1.6f, ph = Fr((SpinT + R(i, 1) * per) / per); int cyc = (int)MathF.Floor((SpinT + R(i, 1) * per) / per), id = i * 37 + cyc * 101;
+                float z = -200f - R(id, 6) * 800f, f = D(z);
+                float cx = (R(id, 2) - .5f) * ex * 1.7f * f, cy = ((R(id, 3) - .5f) * ey * 1.2f - ey * .15f) * f, rad = (120f + R(id, 4) * 160f) * s.Size * f;
+                float k = 1f - (1f - ph) * (1f - ph) * (1f - ph), fade = 1f - ph, drop = ph * ph * 60f * f;
+                int sparks = 40 + (int)(R(id, 5) * 30); var col = V(Vector3.Lerp(Pick(id), Vector3.One, .3f), fade);
+                for (int j = 0; j < sparks; j++)
+                {
+                    // 球の上に、均等に火花を並べる
+                    float yy = 1f - (j + .5f) * 2f / sparks, rr = MathF.Sqrt(MathF.Max(0f, 1f - yy * yy)), a = j * 2.39996f;
+                    var d = new Vector3(MathF.Cos(a) * rr, yy, MathF.Sin(a) * rr);
+                    var p1 = new Vector3(cx, cy + drop, z) + d * rad * k; var p0 = new Vector3(cx, cy + drop, z) + d * rad * MathF.Max(0f, k - .2f);
+                    m.Limb(p0, p1, 1.2f * f, 3.2f * f, col);
+                }
+                m.Ball(cx, cy, z, rad * .3f * (1f - ph), V(Pick(id), .25f * fade));
+            }
+        });
+    }
+
+    void Plaid()
+    {
+        float g = MathF.Max(cell * 2.2f, 90f), ox = Mod(mv, g), oy = Mod(mv * .5f, g), sh = .08f * MathF.Sin(t);
+        for (float x = -ex - g + ox; x <= ex + g; x += g)
+        {
+            m.Box(x + g * .21f, 0, 0, g * .42f, ey * 2.2f, 14f, V(s.Pal.A, .5f + sh), .1f);
+            m.Box(x + g * .66f, 0, 12f, g * .08f, ey * 2.2f, 10f, V(s.Pal.C, .8f), .2f);
+        }
+        for (float y = -ey - g + oy; y <= ey + g; y += g)
+        {
+            m.Box(0, y + g * .21f, -24f, ex * 2.2f, g * .42f, 14f, V(s.Pal.B, .5f - sh), .1f);
+            m.Box(0, y + g * .66f, -12f, ex * 2.2f, g * .08f, 10f, V(s.Pal.C, .8f), .2f);
+        }
+    }
+
+    void Zigzag()
+    {
+        float gap = MathF.Max(cell * .9f, 50f), w = gap * .78f; int n = (int)(ey * 2f / gap) + 3; float off = Mod(mv * .5f + t * 20f, gap);
+        Seg(8, () =>
+        {
+            for (int k = -1; k < n; k++)
+            {
+                float y0 = -ey + k * gap + off, ph = Mod(mv + t * 30f * (k % 2 == 0 ? 1f : -1f), w * 2f), z0 = -k * 30f + 60f; var q = new List<Vector3>();
+                int i = 0;
+                for (float x = -ex - w * 2f + ph; x <= ex + w * 2f; x += w, i++) q.Add(new(x, y0 + (i & 1) * gap * .45f, z0 + (i & 1) * 40f));
+                m.Tube(q, MathF.Max(3f, gap * .09f), V(Ramp(Fr(k * .23f)), .9f));
+            }
+        });
+    }
+
+    static Vector2 HeartPt(float b) => new(MathF.Pow(MathF.Sin(b), 3), -(13f * MathF.Cos(b) - 5f * MathF.Cos(2 * b) - 2f * MathF.Cos(3 * b) - MathF.Cos(4 * b)) / 16f);
+
+    void Hearts()
+    {
+        int n = Math.Clamp(s.N, 10, 160); float h = ey * 2f + 160f;
+        for (int i = 0; i < n; i++)
+        {
+            float z = 60f - R(i, 6) * 900f, f = D(z);
+            float y0 = ey + 80f - Mod(R(i, 1) * h + (mv * .5f + t * 50f) * (.4f + R(i, 2)), h), x0 = (R(i, 0) - .5f) * ex * 2.1f + MathF.Sin(t + i) * 26f, sz = (14f + R(i, 3) * 34f) * s.Size * f;
+            var pts = new List<Vector2>(24);
+            for (int k = 0; k < 24; k++) { var hp = HeartPt(k * MathF.Tau / 24f); pts.Add(hp * sz); }
+            var col = V(Pick(i), .9f * Calm(x0, y0));
+            m.Move(x0 * f, y0 * f, z, () => m.Yaw(0, 0, 0, MathF.Sin(t * 1.3f + i) * 1.2f, () => m.Slab(pts, 0, sz * .35f, col)));
+        }
+    }
+
+    void Sparkles()
+    {
+        int n = Math.Clamp(s.N, 12, 240);
+        for (int i = 0; i < n; i++)
+        {
+            float tw = .3f + .7f * MathF.Abs(MathF.Sin(t * (1.2f + R(i, 2) * 2f) + i * 2.3f));
+            float z = 60f - R(i, 6) * 900f, f = D(z);
+            float x0 = (Fr(R(i, 0) + mv * .0001f) - .5f) * ex * 2.1f, y0 = (R(i, 1) - .5f) * ey * 2f, sz = (22f + R(i, 3) * 50f) * s.Size * (.3f + tw * .7f) * f, a = t * .4f + i;
+            var pts = new List<Vector2>(8);
+            for (int k = 0; k < 8; k++) { float b = k * MathF.PI / 4f, r = k % 2 == 0 ? sz : sz * .22f; pts.Add(new(MathF.Cos(b) * r, MathF.Sin(b) * r)); }
+            var col = V(Vector3.Lerp(Pick(i), Vector3.One, .5f), tw * MathF.Max(.5f, Calm(x0, y0)));
+            m.Move(x0 * f, y0 * f, z, () => m.Turn(0, 0, a, () => m.Yaw(0, 0, 0, a * 1.3f, () => m.Slab(pts, 0, sz * .16f, col))));
+        }
+    }
+
+    void Ribbons()
+    {
+        int n = Math.Clamp(s.N / 12, 3, 10); float st = 30f;
+        for (int k = 0; k < n; k++)
+        {
+            float y0 = -ey * .8f + k * ey * 1.6f / MathF.Max(1, n - 1), th = (26f + R(k, 1) * 40f) * s.Size, z0 = -k * 60f; var col = V(Ramp(k / MathF.Max(1f, n - 1f)), .85f);
+            Vector3 Top(float x, int side)
+            {
+                float y = y0 + MathF.Sin(x / 260f + t * .9f + k * 1.3f) * 90f + MathF.Sin((x + mv) / 120f - t * .6f + k) * 24f, w = th * (.6f + .4f * MathF.Sin(x / 180f + t + k)), tw = MathF.Sin(x / 300f + t * .7f + k) * 1.2f;
+                return new(x, y + side * w * MathF.Cos(tw), z0 + side * w * MathF.Sin(tw));
+            }
+            for (float x = -ex; x <= ex; x += st) m.Quad3D(Top(x, -1), Top(x + st, -1), Top(x + st, 1), Top(x, 1), col);
+        }
+    }
+
+    void Rays()
+    {
+        int n = Math.Clamp(s.N / 6, 5, 30); float l = MathF.Sqrt(ex * ex + ey * ey) * 2.6f; var o = new Vector3(-ex * 1.3f, -ey * 1.3f, -700f);
+        Seg(12, () =>
+        {
+            for (int i = 0; i < n; i++)
+            {
+                float a = .15f + (i + .5f) / n * 1.25f + MathF.Sin(t * .5f + i * 1.7f) * .04f, w = .012f + R(i, 1) * .03f, al = .1f + .16f * (.5f + .5f * MathF.Sin(t * 1.1f + i * 2.1f));
+                var end = o + new Vector3(MathF.Cos(a) * l, MathF.Sin(a) * l, 700f + (R(i, 2) - .5f) * 500f);
+                m.Limb(o, end, 6f, MathF.Max(10f, w * l), V(Ramp(i / (float)n), al));
+            }
+            m.Ball(o.X, o.Y, o.Z, 240f, V(Vector3.One, .4f));
+        });
     }
 }

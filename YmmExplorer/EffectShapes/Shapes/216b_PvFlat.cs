@@ -1,4 +1,4 @@
-using System.Numerics;
+﻿using System.Numerics;
 using Vortice;
 using Vortice.Direct2D1;
 using Vortice.Mathematics;
@@ -16,7 +16,7 @@ internal sealed class PvFlat
     readonly float u, t, mv, cell;
     float ex, ey;
 
-    public static bool IsFlat(PvScene x) => x >= PvScene.Gradient;
+    public static bool IsFlat(PvScene x) => x >= PvScene.Gradient && (x <= PvScene.Curtain || x >= PvScene.Stars);
 
     public static void Paint(ID2D1DeviceContext dc, ID2D1SolidColorBrush br, in PvStage.Setup s) => new PvFlat(dc, br, s).Run();
 
@@ -70,6 +70,16 @@ internal sealed class PvFlat
                 case PvScene.Confetti: Confetti(); break;
                 case PvScene.Halftone: Halftone(); break;
                 case PvScene.Curtain: Curtain(); break;
+                case PvScene.Stars: Stars(); break;
+                case PvScene.Bubbles: Bubbles(); break;
+                case PvScene.Snow: Snow(); break;
+                case PvScene.Fireworks: Fireworks(); break;
+                case PvScene.Plaid: Plaid(); break;
+                case PvScene.Zigzag: Zigzag(); break;
+                case PvScene.Hearts: Hearts(); break;
+                case PvScene.Sparkles: Sparkles(); break;
+                case PvScene.Ribbons: Ribbons(); break;
+                case PvScene.Rays: Rays(); break;
             }
         }
         finally { dc.Transform = prev; }
@@ -482,5 +492,146 @@ internal sealed class PvFlat
             Rect(x - w / 2f, y, x + w / 2f, y + h, C(Pick(id), (.24f + R(id, 4) * .62f) * Calm(x, y)));
             if (i % 4 == 0) { Rect(x - w / 2f + 12f * u, y + h, x + w / 2f + 12f * u, y + h + 2f * u, C(s.Pal.A, .78f)); Rect(x - w / 2f - 12f * u, y - 2f * u, x + w / 2f - 12f * u, y, C(s.Pal.B, .78f)); }
         }
+    }
+
+    // ---------------------------------------------------------------- v121 で足した背景
+    float SpinT => s.T * MathF.Max(.2f, MathF.Abs(s.Spin));
+
+    void Stars()
+    {
+        int n = Math.Clamp(s.N * 3, 40, 900);
+        for (int i = 0; i < n; i++)
+        {
+            float x = (Fr(R(i, 0) + mv * .00005f / u * (.3f + R(i, 3))) - .5f) * ex * 2f, y = (R(i, 1) - .5f) * ey * 2f, tw = .35f + .65f * MathF.Abs(MathF.Sin(t * (1f + R(i, 4) * 2f) + i));
+            float r = (1.2f + R(i, 2) * R(i, 2) * 3.6f) * u * s.Size;
+            Dot(x, y, r * 2.6f, C(Pick(i), .18f * tw)); Dot(x, y, r, C(Vector3.Lerp(Pick(i), Vector3.One, .7f), tw));
+            if (R(i, 5) > .94f)
+            {
+                Line(x - r * 6f, y, x + r * 6f, y, C(Vector3.One, .6f * tw), MathF.Max(1f, u));
+                Line(x, y - r * 6f, x, y + r * 6f, C(Vector3.One, .6f * tw), MathF.Max(1f, u));
+            }
+        }
+    }
+
+    void Bubbles()
+    {
+        int n = Math.Clamp(s.N, 12, 260); float h = ey * 2f + 200f * u;
+        for (int i = 0; i < n; i++)
+        {
+            float r = (10f + R(i, 2) * R(i, 2) * 60f) * u * s.Size, y = ey + 100f * u - Mod(R(i, 1) * h + (mv * .5f + t * 60f * u) * (.4f + R(i, 3)), h), x = (R(i, 0) - .5f) * ex * 2.1f + MathF.Sin(t * 1.2f + i) * 20f * u;
+            float a = .7f * Calm(x, y);
+            Dot(x, y, r, C(Pick(i), a * .15f));
+            Ring(x, y, r, C(Vector3.Lerp(Pick(i), Vector3.One, .4f), a * .8f), MathF.Max(1.2f, r * .08f));
+            Dot(x - r * .38f, y - r * .38f, r * .2f, C(Vector3.One, a * .8f));
+        }
+    }
+
+    void Snow()
+    {
+        int n = Math.Clamp(s.N * 3, 30, 800); float h = ey * 2f + 60f * u;
+        for (int i = 0; i < n; i++)
+        {
+            float y = -ey - 30f * u + Mod(R(i, 1) * h + (mv * .4f + t * 46f * u) * (.4f + R(i, 2)), h), x = (R(i, 0) - .5f) * ex * 2.1f + MathF.Sin(t * .8f + i) * 30f * u, r = (2f + R(i, 3) * R(i, 3) * 7f) * u * s.Size;
+            var c = C(Vector3.Lerp(Pick(i), Vector3.One, .75f), (.55f + R(i, 4) * .45f) * MathF.Max(.6f, Calm(x, y)));
+            if (R(i, 5) > .93f)
+            {
+                float rr = r * 3.2f, a0 = t * .5f + i;
+                for (int k = 0; k < 3; k++) { float a = a0 + k * MathF.PI / 3f; Line(x - MathF.Cos(a) * rr, y - MathF.Sin(a) * rr, x + MathF.Cos(a) * rr, y + MathF.Sin(a) * rr, c, MathF.Max(1.2f, r * .35f)); }
+            }
+            else Dot(x, y, r, c);
+        }
+    }
+
+    void Fireworks()
+    {
+        int n = Math.Clamp(s.N / 10, 3, 14);
+        for (int i = 0; i < n; i++)
+        {
+            float per = 2.4f + R(i, 0) * 1.6f, ph = Fr((SpinT + R(i, 1) * per) / per); int cyc = (int)MathF.Floor((SpinT + R(i, 1) * per) / per), id = i * 37 + cyc * 101;
+            float cx = (R(id, 2) - .5f) * ex * 1.7f, cy = (R(id, 3) - .5f) * ey * 1.2f - ey * .15f, rad = (120f + R(id, 4) * 160f) * u * s.Size;
+            float k = 1f - (1f - ph) * (1f - ph) * (1f - ph), fade = 1f - ph, drop = ph * ph * 60f * u;
+            int sparks = 24 + (int)(R(id, 5) * 24); var col = Pick(id);
+            for (int j = 0; j < sparks; j++)
+            {
+                float a = j * MathF.Tau / sparks, r1 = rad * k, r0 = rad * MathF.Max(0f, k - .18f);
+                Line(cx + MathF.Cos(a) * r0, cy + MathF.Sin(a) * r0 + drop, cx + MathF.Cos(a) * r1, cy + MathF.Sin(a) * r1 + drop, C(Vector3.Lerp(col, Vector3.One, .3f), fade), MathF.Max(1.4f, 3.4f * u));
+                Dot(cx + MathF.Cos(a) * r1, cy + MathF.Sin(a) * r1 + drop, 3.4f * u, C(Vector3.One, fade));
+            }
+            Dot(cx, cy, rad * .35f * (1f - ph), C(col, .25f * fade));
+        }
+    }
+
+    void Plaid()
+    {
+        float g = cell * 2.2f, ox = Mod(mv, g), oy = Mod(mv * .5f, g), sh = .08f * MathF.Sin(t);
+        for (float x = -ex - g + ox; x <= ex + g; x += g) { Rect(x, -ey, x + g * .42f, ey, C(s.Pal.A, .32f + sh)); Rect(x + g * .62f, -ey, x + g * .7f, ey, C(s.Pal.C, .5f)); }
+        for (float y = -ey - g + oy; y <= ey + g; y += g) { Rect(-ex, y, ex, y + g * .42f, C(s.Pal.B, .32f - sh)); Rect(-ex, y + g * .62f, ex, y + g * .7f, C(s.Pal.C, .5f)); }
+    }
+
+    void Zigzag()
+    {
+        float gap = cell * .9f, w = cell * .7f; int n = (int)(ey * 2f / gap) + 3; float off = Mod(mv * .5f + t * 20f * u, gap);
+        for (int k = -1; k < n; k++)
+        {
+            float y0 = -ey + k * gap + off, ph = Mod(mv + t * 30f * u * (k % 2 == 0 ? 1f : -1f), w * 2f); var q = new List<Vector2>();
+            int i = 0;
+            for (float x = -ex - w * 2f + ph; x <= ex + w * 2f; x += w, i++) q.Add(new(x, y0 + (i & 1) * gap * .45f));
+            Path(q, C(Ramp(Fr(k * .23f)), .85f), MathF.Max(2f, gap * .16f));
+        }
+    }
+
+    static Vector2 HeartPt(float b) => new(MathF.Pow(MathF.Sin(b), 3), -(13f * MathF.Cos(b) - 5f * MathF.Cos(2 * b) - 2f * MathF.Cos(3 * b) - MathF.Cos(4 * b)) / 16f);
+
+    void Hearts()
+    {
+        int n = Math.Clamp(s.N, 10, 200); float h = ey * 2f + 160f * u;
+        for (int i = 0; i < n; i++)
+        {
+            float y = ey + 80f * u - Mod(R(i, 1) * h + (mv * .5f + t * 50f * u) * (.4f + R(i, 2)), h), x = (R(i, 0) - .5f) * ex * 2.1f + MathF.Sin(t + i) * 26f * u, z = (12f + R(i, 3) * 30f) * u * s.Size, a = MathF.Sin(t * 1.3f + i) * .4f;
+            var q = new List<Vector2>(24);
+            for (int k = 0; k < 24; k++) { var hp = HeartPt(k * MathF.Tau / 24f); q.Add(new(x + (hp.X * MathF.Cos(a) - hp.Y * MathF.Sin(a)) * z, y + (hp.X * MathF.Sin(a) + hp.Y * MathF.Cos(a)) * z)); }
+            br.Color = C(Pick(i), .8f * Calm(x, y)); Gfx.FillPoly(dc, br, q);
+        }
+    }
+
+    void Sparkles()
+    {
+        int n = Math.Clamp(s.N, 12, 300);
+        for (int i = 0; i < n; i++)
+        {
+            float x = (Fr(R(i, 0) + mv * .0001f / u) - .5f) * ex * 2.1f, y = (R(i, 1) - .5f) * ey * 2f, tw = .3f + .7f * MathF.Abs(MathF.Sin(t * (1.2f + R(i, 2) * 2f) + i * 2.3f));
+            float z = (16f + R(i, 3) * 44f) * u * s.Size * (.3f + tw * .7f), a = t * .4f + i;
+            var q = new List<Vector2>(8);
+            for (int k = 0; k < 8; k++) { float b = a + k * MathF.PI / 4f, r = k % 2 == 0 ? z : z * .22f; q.Add(new(x + MathF.Cos(b) * r, y + MathF.Sin(b) * r)); }
+            Dot(x, y, z * .5f, C(Pick(i), tw * .15f));
+            br.Color = C(Vector3.Lerp(Pick(i), Vector3.One, .5f), tw * MathF.Max(.5f, Calm(x, y))); Gfx.FillPoly(dc, br, q);
+        }
+    }
+
+    void Ribbons()
+    {
+        int n = Math.Clamp(s.N / 12, 3, 10); float st = MathF.Max(8f, 16f * u);
+        for (int k = 0; k < n; k++)
+        {
+            float y0 = -ey * .8f + k * ey * 1.6f / MathF.Max(1, n - 1), th = (26f + R(k, 1) * 40f) * u * s.Size; var top = new List<Vector2>(); var bot = new List<Vector2>();
+            for (float x = -ex; x <= ex + st; x += st)
+            {
+                float y = y0 + MathF.Sin(x / (260f * u) + t * .9f + k * 1.3f) * 90f * u + MathF.Sin((x + mv) / (120f * u) - t * .6f + k) * 24f * u, w = th * (.6f + .4f * MathF.Sin(x / (180f * u) + t + k));
+                top.Add(new(x, y - w)); bot.Add(new(x, y + w));
+            }
+            bot.Reverse(); top.AddRange(bot);
+            br.Color = C(Ramp(k / MathF.Max(1f, n - 1f)), .7f); Gfx.FillPoly(dc, br, top);
+        }
+    }
+
+    void Rays()
+    {
+        int n = Math.Clamp(s.N / 6, 5, 30); float l = MathF.Sqrt(ex * ex + ey * ey) * 2.4f, ox = -ex * 1.1f, oy = -ey * 1.1f;
+        for (int i = 0; i < n; i++)
+        {
+            float a = .15f + (i + .5f) / n * 1.25f + MathF.Sin(t * .5f + i * 1.7f) * .04f, w = .012f + R(i, 1) * .03f, al = .1f + .16f * (.5f + .5f * MathF.Sin(t * 1.1f + i * 2.1f));
+            Poly(C(Ramp(i / (float)n), al), ox, oy, ox + MathF.Cos(a - w) * l, oy + MathF.Sin(a - w) * l, ox + MathF.Cos(a + w) * l, oy + MathF.Sin(a + w) * l);
+        }
+        Blob(ox + ex * .1f, oy + ey * .1f, 260f * u, Vector3.One, .5f);
     }
 }
