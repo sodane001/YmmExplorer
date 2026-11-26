@@ -88,7 +88,10 @@ internal sealed class PvFlat3D
             case PvScene.Sparkles: Sparkles(); break;
             case PvScene.Ribbons: Ribbons(); break;
             case PvScene.Rays: Rays(); break;
-            default: if (PvMono.IsMono(s.Scene)) Seg(12, () => new PvMono(new Ink3D(m, s), s, ex, ey).Run()); break;
+            default:
+                if (PvMono.IsMono(s.Scene)) Seg(12, () => new PvMono(new Ink3D(m, s), s, ex, ey).Run());
+                else if (PvPat.IsPat(s.Scene)) Seg(12, () => new PvPat(new Canvas3D(m, s), s, ex, ey).Run());
+                break;
         }
     }
 

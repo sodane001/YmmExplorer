@@ -16,7 +16,7 @@ internal sealed class PvFlat
     readonly float u, t, mv, cell;
     float ex, ey;
 
-    public static bool IsFlat(PvScene x) => x >= PvScene.Gradient && (x <= PvScene.Curtain || x >= PvScene.Stars);
+    public static bool IsFlat(PvScene x) => x >= PvScene.Gradient && (x <= PvScene.Curtain || (x >= PvScene.Stars && x <= PvScene.MonoRandom2) || x >= PvScene.MonoSymbol);
 
     public static void Paint(ID2D1DeviceContext dc, ID2D1SolidColorBrush br, in PvStage.Setup s) => new PvFlat(dc, br, s).Run();
 
@@ -80,7 +80,10 @@ internal sealed class PvFlat
                 case PvScene.Sparkles: Sparkles(); break;
                 case PvScene.Ribbons: Ribbons(); break;
                 case PvScene.Rays: Rays(); break;
-                default: if (PvMono.IsMono(s.Scene)) new PvMono(new Ink2D(dc, br, u, s), s, ex / u, ey / u).Run(); break;
+                default:
+                    if (PvMono.IsMono(s.Scene)) new PvMono(new Ink2D(dc, br, u, s), s, ex / u, ey / u).Run();
+                    else if (PvPat.IsPat(s.Scene)) new PvPat(new Canvas2D(dc, br, u, s), s, ex / u, ey / u).Run();
+                    break;
             }
         }
         finally { dc.Transform = prev; }

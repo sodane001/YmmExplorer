@@ -70,7 +70,7 @@ internal sealed class Ink3D(Sculpt m, PvStage.Setup s) : IInk
 internal sealed class PvMono
 {
     /// <summary>白黒の図形の仲間か(紙とインクの配色・暗くしない・光を当てない、の対象)</summary>
-    public static bool IsMono(PvScene x) => x == PvScene.MonoGeo || (x >= PvScene.MonoCircle && x <= PvScene.MonoRandom2);
+    public static bool IsMono(PvScene x) => x == PvScene.MonoGeo || (x >= PvScene.MonoCircle && x <= PvScene.MonoRandom2) || (x >= PvScene.MonoSymbol && x <= PvScene.MonoAlt);
 
     readonly IInk k;
     readonly PvStage.Setup s;
@@ -110,6 +110,14 @@ internal sealed class PvMono
             case PvScene.MonoFrame: FrameLayout(); break;
             case PvScene.MonoTri: TriLayout(); break;
             case PvScene.MonoRandom2: RandomLayout2(); break;
+            case PvScene.MonoSymbol: SymbolLayout(); break;
+            case PvScene.MonoGauge: GaugeLayout(); break;
+            case PvScene.MonoBands: BandsLayout(); break;
+            case PvScene.MonoBlueprint: BlueprintLayout(); break;
+            case PvScene.MonoScore: ScoreLayout(); break;
+            case PvScene.MonoMap: MapLayout(); break;
+            case PvScene.MonoSignal: SignalLayout(); break;
+            case PvScene.MonoAlt: AltLayout(); break;
             default: Classic(); break;
         }
     }
@@ -753,5 +761,98 @@ internal sealed class PvMono
             case 24: Progress(cx - 190f, cy - 25f, 380f, 50f, 8); break;
             default: DotFade(cx - 180f, cy - 60f, 10, 4, 40f); break;
         }
+    }
+
+    // ---------------------------------------------------------------- v126 で足した部品と配置
+    /// <summary>五線(音符が拍ごとに左へ流れる)</summary>
+    void Staff(float y, int key)
+    {
+        for (int l = 0; l < 5; l++) L(-940f, y + l * 18f, 940f, y + l * 18f, 1.4f, 15f);
+        float run = st * 32f, sh = Mod(run, 130f); int off = (int)MathF.Floor(run / 130f);
+        for (int i = 0; i < 16; i++)
+        {
+            float x = -900f + i * 130f - sh; if (x < -930f || x > 930f) continue;
+            int id = i + off + key;
+            if (id % 4 == 0) { L(x - 40f, y, x - 40f, y + 72f, 2f, 18f); continue; }
+            float ny = y + 72f - (int)(R(id, 60) * 9f) * 9f;
+            D(x, ny, 10f, 24f); L(x + 9f, ny, x + 9f, ny - 58f, 2f, 24f);
+            if (R(id, 61) > .6f) L(x + 9f, ny - 58f, x + 30f, ny - 40f, 3f, 24f);
+        }
+    }
+
+    void SymbolLayout()
+    {
+        Corners(28f, 60f);
+        XGrid(-880f, -450f, 5, 3, 100f, 100f, 14f);
+        DiamondRow(-200f, -440f, 6, 18f, 64f);
+        Crosshair(620f, -260f, 110f);
+        BigX(-600f, 150f, 70f);
+        Chevrons(-880f, 360f, 6, 32f, 60f);
+        Star(640f, 300f, 70f, st * MathF.PI / 10f, true);
+    }
+
+    void GaugeLayout()
+    {
+        Ruler(-480f, -940f, 940f, 1f);
+        TickRing(-600f, -150f, 170f);
+        Concentric(-600f, -150f, 110f, 4);
+        TickRing(620f, 200f, 140f);
+        HalfMoon(620f, 200f, 70f);
+        Progress(-880f, 340f, 520f, 46f, 10);
+    }
+
+    void BandsLayout()
+    {
+        Band(-ey - 4f, -460f);
+        Band(440f, ey + 4f);
+        Checker(-880f, -400f, 26, 1, 34f);
+        Checker(80f, 362f, 24, 1, 34f);
+        Dashes(-940f, -300f, 940f, -300f, 30f, 16f);
+        Dashes(-940f, 300f, 940f, 300f, 30f, 16f);
+    }
+
+    void BlueprintLayout()
+    {
+        PlusGrid(60f, 5f);
+        DoubleFrame(30f);
+        CellGrid(560f, -440f, 6, 4, 52f);
+        Crosshair(-620f, -240f, 100f);
+        Dashes(-900f, 380f, -300f, 140f, 24f, 12f);
+        Ruler(440f, -900f, 900f, -1f);
+    }
+
+    void ScoreLayout()
+    {
+        Corners(28f, 60f);
+        Staff(-420f, 0);
+        Staff(300f, 50);
+    }
+
+    void MapLayout()
+    {
+        Corners(28f, 60f);
+        Network(-900f, -470f, 800f, 320f, 16, 11);
+        CircleRow(300f, -430f, 7, 14f, 60f);
+        Crosshair(600f, 260f, 120f);
+        Concentric(600f, 260f, 60f, 3);
+        Dashes(-900f, 420f, -200f, 300f, 24f, 12f);
+    }
+
+    void SignalLayout()
+    {
+        CircleRow(-880f, -430f, 10, 18f, 56f);
+        CircleRow(-880f, -370f, 9, 18f, 56f);
+        EqBars(500f, -300f, 12, 18f, 10f, 150f);
+        Barcode(-880f, 300f, 360f, 100f);
+        Progress(380f, 330f, 520f, 40f, 10);
+    }
+
+    void AltLayout()
+    {
+        TriRow(-900f, -430f, 16, 64f);
+        BigTri(640f, -160f, 120f, 0f);
+        HalfMoon(-660f, -150f, 90f);
+        SpinSquares(-880f, 330f, 9, 26f, 80f);
+        DiamondRow(300f, 330f, 8, 18f, 70f);
     }
 }

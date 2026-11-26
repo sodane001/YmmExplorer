@@ -350,6 +350,7 @@
     <Compile Include="EffectShapes\Shapes\216b_PvFlat.cs" />
     <Compile Include="EffectShapes\Shapes\216c_PvFlat3D.cs" />
     <Compile Include="EffectShapes\Shapes\216d_PvMono.cs" />
+    <Compile Include="EffectShapes\Shapes\216e_PvPat.cs" />
     <Compile Include="EffectShapes\Shapes\217a_QKit6.cs" />
     <Compile Include="EffectShapes\Shapes\218a_QKit7.cs" />
     <Compile Include="EffectShapes\Shapes\218_QFamilies2.cs" />
