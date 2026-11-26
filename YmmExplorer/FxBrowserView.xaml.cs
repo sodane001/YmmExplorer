@@ -1,4 +1,4 @@
-using System.Windows;
+﻿using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
 
@@ -19,6 +19,13 @@ public partial class FxBrowserView : UserControl
         var width = list.ActualWidth - SystemParameters.VerticalScrollBarWidth - 4;
         if (width > 0) Vm?.SetColumns((int)(width / TileWidth));
     }
+
+    void Tile_MouseEnter(object sender, MouseEventArgs e)
+    {
+        if ((sender as FrameworkElement)?.DataContext is FxInfoItem it) Vm?.HoverTile(it);
+    }
+
+    void Tile_MouseLeave(object sender, MouseEventArgs e) => Vm?.HoverTile(null);
 
     void Tile_MouseLeftButtonDown(object sender, MouseButtonEventArgs e)
     {

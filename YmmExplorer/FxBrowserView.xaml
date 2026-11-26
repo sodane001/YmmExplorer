@@ -100,11 +100,12 @@
 
         <DataTemplate x:Key="EsTile">
             <Border x:Name="Box" Width="168" Margin="4" CornerRadius="7" Background="{StaticResource EsCard}" BorderThickness="2"
-                    BorderBrush="Transparent" Cursor="Hand" ToolTip="{Binding Description}" MouseLeftButtonDown="Tile_MouseLeftButtonDown">
+                    BorderBrush="Transparent" Cursor="Hand" ToolTip="{Binding Description}" MouseLeftButtonDown="Tile_MouseLeftButtonDown" MouseEnter="Tile_MouseEnter" MouseLeave="Tile_MouseLeave">
                 <StackPanel>
                     <Grid Height="92" Background="#202227">
                         <TextBlock Text="✦" FontSize="24" Foreground="#4A4F59" HorizontalAlignment="Center" VerticalAlignment="Center"/>
                         <Image Source="{Binding Thumb}" Stretch="Uniform" RenderOptions.BitmapScalingMode="HighQuality"/>
+                        <Image Source="{Binding AnimFrame}" Stretch="Uniform" RenderOptions.BitmapScalingMode="HighQuality"/>
                     </Grid>
                     <TextBlock Text="{Binding Name}" FontSize="12" TextTrimming="CharacterEllipsis" Margin="8,5,8,6"/>
                 </StackPanel>
