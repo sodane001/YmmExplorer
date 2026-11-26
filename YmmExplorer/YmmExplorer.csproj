@@ -360,6 +360,9 @@
     <Compile Include="EffectShapes\Shapes\221a_QKit9.cs" />
     <Compile Include="EffectShapes\Shapes\221_QFamilies4.cs" />
     <Compile Include="EffectShapes\Models\Models_L1b.cs" />
+    <Compile Include="EffectShapes\Shapes\222a_QKit10.cs" />
+    <Compile Include="EffectShapes\Shapes\222_QFamilies5.cs" />
+    <Compile Include="EffectShapes\Models\Models_L1c.cs" />
     <Compile Include="EffectShapes\Shapes\217_QFamilies.cs" />
     <Compile Include="EffectShapes\Shapes\219_Solid3D.cs" />
   </ItemGroup>
