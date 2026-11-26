@@ -223,6 +223,8 @@ public sealed class ExplorerSettings
 
     /// <summary>映像エフェクトのまとまりを、選択中のアイテムのエフェクトに追加する(オフなら、既存のエフェクトをすべて削除してから追加する)</summary>
     public bool VideoEffectAppend { get; set; } = true;
+    /// <summary>エフェクトタブで、映像エフェクトのサムネイルに使うサンプル画像(空欄なら同梱の絵)</summary>
+    public string FxSampleImage { get; set; } = "";
 
     /// <summary>音声エフェクトのまとまりを、選択中のアイテムのエフェクトに追加する(オフなら、既存のエフェクトをすべて削除してから追加する)</summary>
     public bool AudioEffectAppend { get; set; } = true;

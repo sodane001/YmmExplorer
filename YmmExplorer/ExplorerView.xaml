@@ -2507,8 +2507,12 @@
         <local:EffectShapeBrowserView Grid.Row="1" DataContext="{Binding EffectShapes}"
                                       Visibility="{Binding DataContext.ShowEffectShapeView, RelativeSource={RelativeSource AncestorType=UserControl}, Converter={StaticResource B2V}}"/>
 
-        <!-- ===== 映像エフェクトタブ ===== -->
-        <Grid Grid.Row="1" Visibility="{Binding ShowVideoEffectView, Converter={StaticResource B2V}}">
+        <!-- ===== エフェクトタブ(同梱の演出エフェクト。映像はサンプル画像のサムネイル、音声は一覧) ===== -->
+        <local:FxBrowserView Grid.Row="1" DataContext="{Binding FxBrowser}"
+                             Visibility="{Binding DataContext.ShowVideoEffectView, RelativeSource={RelativeSource AncestorType=UserControl}, Converter={StaticResource B2V}}"/>
+
+        <!-- 前の「映像エフェクト」タブ(自分で追加する方式)。v131 から使わない -->
+        <Grid Grid.Row="1" Visibility="Collapsed">
             <Grid DataContext="{Binding VideoFx}">
                 <Grid.RowDefinitions>
                     <RowDefinition Height="Auto"/>
@@ -2967,7 +2971,7 @@
         </Grid>
 
         <!-- ===== 音声エフェクトタブ ===== -->
-        <Grid Grid.Row="1" Visibility="{Binding ShowAudioEffectView, Converter={StaticResource B2V}}">
+        <Grid Grid.Row="1" Visibility="Collapsed">
             <Grid DataContext="{Binding AudioFx}">
                 <Grid.RowDefinitions>
                     <RowDefinition Height="Auto"/>
@@ -5419,6 +5423,24 @@
                     </Border>
 
                     <Border Background="{StaticResource Panel}" CornerRadius="10" Padding="18" Margin="0,0,0,14">
+                        <StackPanel DataContext="{Binding FxBrowser}">
+                            <TextBlock Text="エフェクトタブ" FontWeight="SemiBold" Margin="0,0,0,4"/>
+                            <TextBlock Text="同梱の演出エフェクトだけを並べます(YMM4 標準のエフェクトは並べません)。映像エフェクトのサムネイルは、ここで決めたサンプル画像にエフェクトをかけて自動で作ります。画像を変えると、作り直します。"
+                                       Foreground="{StaticResource Sub}" FontSize="11" TextWrapping="Wrap" Margin="0,0,0,14"/>
+                            <StackPanel Orientation="Horizontal" Margin="0,0,0,10">
+                                <TextBlock Text="サンプル画像" VerticalAlignment="Center" Width="100"/>
+                                <TextBlock Text="{Binding SampleText}" VerticalAlignment="Center" FontWeight="SemiBold"/>
+                            </StackPanel>
+                            <StackPanel Orientation="Horizontal">
+                                <Button Style="{StaticResource FilledBtn}" Content="画像を選ぶ…" Command="{Binding ChooseSampleCommand}"/>
+                                <Button Style="{StaticResource FilledBtn}" Content="同梱の画像に戻す" Command="{Binding ResetSampleCommand}" Margin="8,0,0,0"/>
+                                <Button Style="{StaticResource FilledBtn}" Content="サムネイルを作り直す" Command="{Binding RebuildThumbsCommand}" Margin="8,0,0,0"/>
+                            </StackPanel>
+                            <TextBlock Text="{Binding Message}" Foreground="{StaticResource Sub}" FontSize="11" TextWrapping="Wrap" Margin="0,8,0,0"/>
+                        </StackPanel>
+                    </Border>
+
+                    <Border Visibility="Collapsed" Background="{StaticResource Panel}" CornerRadius="10" Padding="18" Margin="0,0,0,14">
                         <StackPanel>
                             <TextBlock Text="映像エフェクトのタブ" FontWeight="SemiBold" Margin="0,0,0,4"/>
                             <TextBlock Text="YMM4でコピーした映像エフェクトを保存しておく場所です。タブごとに別々に保存されます。隠したタブ・減らしたタブの中身は消えません。"
@@ -5474,7 +5496,7 @@
                         </StackPanel>
                     </Border>
 
-                    <Border Background="{StaticResource Panel}" CornerRadius="10" Padding="18" Margin="0,0,0,14">
+                    <Border Visibility="Collapsed" Background="{StaticResource Panel}" CornerRadius="10" Padding="18" Margin="0,0,0,14">
                         <StackPanel>
                             <TextBlock Text="音声エフェクトのタブ" FontWeight="SemiBold" Margin="0,0,0,4"/>
                             <TextBlock Text="YMM4でコピーした音声エフェクトを保存しておく場所です。タブごとに別々に保存されます。隠したタブ・減らしたタブの中身は消えません。"

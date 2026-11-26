@@ -1,0 +1,246 @@
+﻿<UserControl x:Class="YmmExplorer.FxBrowserView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             Background="#1B1C20" Foreground="#F3F4F6" FontFamily="Yu Gothic UI, Meiryo UI, Segoe UI" FontSize="13">
+    <UserControl.Resources>
+        <SolidColorBrush x:Key="EsPanel" Color="#25272C"/>
+        <SolidColorBrush x:Key="EsCard" Color="#2F3238"/>
+        <SolidColorBrush x:Key="EsHover" Color="#3A3E46"/>
+        <SolidColorBrush x:Key="EsAccent" Color="#60CDFF"/>
+        <SolidColorBrush x:Key="EsText" Color="#F3F4F6"/>
+        <SolidColorBrush x:Key="EsSub" Color="#9CA3AF"/>
+        <BooleanToVisibilityConverter x:Key="EsB2V"/>
+
+        <Style x:Key="EsSubTab" TargetType="RadioButton">
+            <Setter Property="Foreground" Value="{StaticResource EsSub}"/>
+            <Setter Property="FontWeight" Value="SemiBold"/>
+            <Setter Property="Cursor" Value="Hand"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="RadioButton">
+                        <Border x:Name="B" Background="Transparent" CornerRadius="6" Padding="18,7" Margin="0,0,4,0">
+                            <ContentPresenter HorizontalAlignment="Center"/>
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True"><Setter TargetName="B" Property="Background" Value="{StaticResource EsHover}"/></Trigger>
+                            <Trigger Property="IsChecked" Value="True">
+                                <Setter TargetName="B" Property="Background" Value="{StaticResource EsAccent}"/>
+                                <Setter Property="Foreground" Value="#10141A"/>
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+        <Style x:Key="EsCategoryItem" TargetType="ListBoxItem">
+            <Setter Property="Foreground" Value="{StaticResource EsText}"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="ListBoxItem">
+                        <Border x:Name="B" Background="Transparent" CornerRadius="6" Padding="10,7" Margin="0,0,0,2">
+                            <ContentPresenter/>
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True"><Setter TargetName="B" Property="Background" Value="{StaticResource EsHover}"/></Trigger>
+                            <Trigger Property="IsSelected" Value="True">
+                                <Setter TargetName="B" Property="Background" Value="{StaticResource EsAccent}"/>
+                                <Setter Property="Foreground" Value="#10141A"/>
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+        <Style x:Key="EsRowItem" TargetType="ListBoxItem">
+            <Setter Property="Focusable" Value="False"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="ListBoxItem"><ContentPresenter/></ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+        <Style x:Key="EsPlaceButton" TargetType="Button">
+            <Setter Property="Foreground" Value="#10141A"/>
+            <Setter Property="FontWeight" Value="SemiBold"/>
+            <Setter Property="Cursor" Value="Hand"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Button">
+                        <Border x:Name="B" Background="{StaticResource EsAccent}" CornerRadius="6" Padding="12,8">
+                            <ContentPresenter HorizontalAlignment="Center"/>
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True"><Setter TargetName="B" Property="Background" Value="#8ADBFF"/></Trigger>
+                            <Trigger Property="IsEnabled" Value="False"><Setter TargetName="B" Property="Opacity" Value=".4"/></Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+        <Style x:Key="EsPlainButton" TargetType="Button">
+            <Setter Property="Foreground" Value="{StaticResource EsText}"/>
+            <Setter Property="Cursor" Value="Hand"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Button">
+                        <Border x:Name="B" Background="{StaticResource EsCard}" CornerRadius="6" Padding="12,7">
+                            <ContentPresenter HorizontalAlignment="Center"/>
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True"><Setter TargetName="B" Property="Background" Value="{StaticResource EsHover}"/></Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+        <DataTemplate x:Key="EsTile">
+            <Border x:Name="Box" Width="168" Margin="4" CornerRadius="7" Background="{StaticResource EsCard}" BorderThickness="2"
+                    BorderBrush="Transparent" Cursor="Hand" ToolTip="{Binding Description}" MouseLeftButtonDown="Tile_MouseLeftButtonDown">
+                <StackPanel>
+                    <Grid Height="92" Background="#202227">
+                        <TextBlock Text="✦" FontSize="24" Foreground="#4A4F59" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                        <Image Source="{Binding Thumb}" Stretch="Uniform" RenderOptions.BitmapScalingMode="HighQuality"/>
+                    </Grid>
+                    <TextBlock Text="{Binding Name}" FontSize="12" TextTrimming="CharacterEllipsis" Margin="8,5,8,6"/>
+                </StackPanel>
+            </Border>
+            <DataTemplate.Triggers>
+                <Trigger SourceName="Box" Property="IsMouseOver" Value="True"><Setter TargetName="Box" Property="Background" Value="{StaticResource EsHover}"/></Trigger>
+                <DataTrigger Binding="{Binding IsSelected}" Value="True"><Setter TargetName="Box" Property="BorderBrush" Value="{StaticResource EsAccent}"/></DataTrigger>
+            </DataTemplate.Triggers>
+        </DataTemplate>
+
+        <DataTemplate x:Key="EsRow">
+            <ItemsControl ItemsSource="{Binding Tiles}" ItemTemplate="{StaticResource EsTile}">
+                <ItemsControl.ItemsPanel>
+                    <ItemsPanelTemplate><StackPanel Orientation="Horizontal"/></ItemsPanelTemplate>
+                </ItemsControl.ItemsPanel>
+            </ItemsControl>
+        </DataTemplate>
+
+        <!-- 音声エフェクト: 名前と説明の行 -->
+        <DataTemplate x:Key="FxLine">
+            <Border x:Name="Box" Margin="4,2" Padding="12,8" CornerRadius="7" Background="{StaticResource EsCard}" BorderThickness="2"
+                    BorderBrush="Transparent" Cursor="Hand" MouseLeftButtonDown="Tile_MouseLeftButtonDown">
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="Auto"/>
+                        <ColumnDefinition Width="230"/>
+                        <ColumnDefinition Width="*"/>
+                    </Grid.ColumnDefinitions>
+                    <TextBlock Text="♪" Foreground="{StaticResource EsAccent}" FontSize="14" Margin="0,0,10,0" VerticalAlignment="Center"/>
+                    <TextBlock Grid.Column="1" Text="{Binding Name}" FontWeight="SemiBold" TextTrimming="CharacterEllipsis" VerticalAlignment="Center"/>
+                    <TextBlock Grid.Column="2" Text="{Binding Description}" Foreground="{StaticResource EsSub}" FontSize="12" TextTrimming="CharacterEllipsis"
+                               VerticalAlignment="Center" ToolTip="{Binding Description}"/>
+                </Grid>
+            </Border>
+            <DataTemplate.Triggers>
+                <Trigger SourceName="Box" Property="IsMouseOver" Value="True"><Setter TargetName="Box" Property="Background" Value="{StaticResource EsHover}"/></Trigger>
+                <DataTrigger Binding="{Binding IsSelected}" Value="True"><Setter TargetName="Box" Property="BorderBrush" Value="{StaticResource EsAccent}"/></DataTrigger>
+            </DataTemplate.Triggers>
+        </DataTemplate>
+    </UserControl.Resources>
+
+    <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+        </Grid.RowDefinitions>
+
+        <StackPanel Orientation="Horizontal" Margin="8,7,8,0">
+            <RadioButton Style="{StaticResource EsSubTab}" GroupName="FxMode" Content="映像エフェクト" IsChecked="{Binding IsVideo}"/>
+            <RadioButton Style="{StaticResource EsSubTab}" GroupName="FxMode" Content="音声エフェクト" IsChecked="{Binding IsAudio}"/>
+        </StackPanel>
+
+        <Grid Grid.Row="1">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="200"/>
+                <ColumnDefinition Width="*"/>
+                <ColumnDefinition Width="270"/>
+            </Grid.ColumnDefinitions>
+
+            <Border Margin="6,6,0,6" Padding="8" CornerRadius="10" Background="{StaticResource EsPanel}">
+                <DockPanel>
+                    <TextBlock DockPanel.Dock="Top" Text="分類" Foreground="{StaticResource EsSub}" FontSize="11" Margin="6,2,0,6"/>
+                    <ListBox ItemsSource="{Binding Categories}" SelectedItem="{Binding SelectedCategory}" DisplayMemberPath="Label"
+                             ItemContainerStyle="{StaticResource EsCategoryItem}" Background="Transparent" BorderThickness="0"
+                             ScrollViewer.HorizontalScrollBarVisibility="Disabled"/>
+                </DockPanel>
+            </Border>
+
+            <Border Grid.Column="1" Margin="6" CornerRadius="10" Background="{StaticResource EsPanel}">
+                <Grid>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="*"/>
+                    </Grid.RowDefinitions>
+                    <Grid Margin="10,10,10,4">
+                        <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
+                        <Grid>
+                            <TextBox Text="{Binding Search, UpdateSourceTrigger=PropertyChanged}" Padding="8,6" Background="{StaticResource EsCard}"
+                                     Foreground="{StaticResource EsText}" CaretBrush="{StaticResource EsText}" BorderBrush="#454A53"/>
+                            <TextBlock Text="エフェクトを検索(例: ぼかし / 昭和 / 電話 / glitch)" Foreground="{StaticResource EsSub}" Margin="11,6,0,0" IsHitTestVisible="False"
+                                       Visibility="{Binding HasNoSearch, Converter={StaticResource EsB2V}}"/>
+                        </Grid>
+                        <TextBlock Grid.Column="1" Text="{Binding CountText}" Foreground="{StaticResource EsSub}" VerticalAlignment="Center" Margin="12,0,2,0"/>
+                    </Grid>
+                    <TextBlock Grid.Row="1" Text="{Binding Status}" Foreground="{StaticResource EsAccent}" FontSize="12" TextWrapping="Wrap" Margin="12,2,12,4"
+                               Visibility="{Binding HasStatus, Converter={StaticResource EsB2V}}"/>
+                    <!-- 映像: サムネイルの並び -->
+                    <ListBox Grid.Row="2" ItemsSource="{Binding Rows}" ItemContainerStyle="{StaticResource EsRowItem}" ItemTemplate="{StaticResource EsRow}"
+                             Background="Transparent" BorderThickness="0" Margin="6,0,2,6"
+                             Visibility="{Binding IsVideo, Converter={StaticResource EsB2V}}"
+                             ScrollViewer.HorizontalScrollBarVisibility="Disabled" ScrollViewer.CanContentScroll="True"
+                             VirtualizingPanel.IsVirtualizing="True" VirtualizingPanel.VirtualizationMode="Recycling" VirtualizingPanel.ScrollUnit="Pixel"
+                             SizeChanged="RowList_SizeChanged"/>
+                    <!-- 音声: 名前と説明の一覧 -->
+                    <ListBox Grid.Row="2" ItemsSource="{Binding ListItems}" ItemContainerStyle="{StaticResource EsRowItem}" ItemTemplate="{StaticResource FxLine}"
+                             Background="Transparent" BorderThickness="0" Margin="6,0,2,6"
+                             Visibility="{Binding IsAudio, Converter={StaticResource EsB2V}}"
+                             ScrollViewer.HorizontalScrollBarVisibility="Disabled" ScrollViewer.CanContentScroll="True"
+                             VirtualizingPanel.IsVirtualizing="True" VirtualizingPanel.VirtualizationMode="Recycling" VirtualizingPanel.ScrollUnit="Pixel"/>
+                </Grid>
+            </Border>
+
+            <Border Grid.Column="2" Margin="0,6,6,6" Padding="14" CornerRadius="10" Background="{StaticResource EsPanel}">
+                <DockPanel>
+                    <!-- サンプル画像(映像エフェクトのサムネイルに使う) -->
+                    <StackPanel DockPanel.Dock="Bottom" Visibility="{Binding IsVideo, Converter={StaticResource EsB2V}}">
+                        <Border Height="1" Background="#3A3E46" Margin="0,4,0,10"/>
+                        <TextBlock Text="サムネイルのサンプル画像" Foreground="{StaticResource EsSub}" FontSize="11" Margin="0,0,0,3"/>
+                        <TextBlock Text="{Binding SampleText}" TextTrimming="CharacterEllipsis" Margin="0,0,0,6"/>
+                        <StackPanel Orientation="Horizontal">
+                            <Button Style="{StaticResource EsPlainButton}" Content="画像を選ぶ…" Command="{Binding ChooseSampleCommand}" Margin="0,0,6,0"/>
+                            <Button Style="{StaticResource EsPlainButton}" Content="元に戻す" Command="{Binding ResetSampleCommand}"/>
+                        </StackPanel>
+                    </StackPanel>
+                    <StackPanel>
+                        <TextBlock Text="エフェクトを選ぶと、ここに表示します。ダブルクリックで、YMM4のタイムラインで選択中のアイテムに付けます。" Foreground="{StaticResource EsSub}" TextWrapping="Wrap" Margin="0,0,0,12"
+                                   Visibility="{Binding HasNoSelected, Converter={StaticResource EsB2V}}"/>
+                        <StackPanel Visibility="{Binding HasSelected, Converter={StaticResource EsB2V}}">
+                            <Border CornerRadius="8" Background="#202227" ClipToBounds="True" Margin="0,0,0,10"
+                                    Visibility="{Binding IsVideo, Converter={StaticResource EsB2V}}">
+                                <Image Source="{Binding Selected.Thumb}" Height="130" Stretch="Uniform" RenderOptions.BitmapScalingMode="HighQuality"/>
+                            </Border>
+                            <TextBlock Text="{Binding Selected.Name}" FontWeight="SemiBold" FontSize="14" TextWrapping="Wrap" Margin="0,0,0,3"/>
+                            <TextBlock Foreground="{StaticResource EsSub}" FontSize="12" Margin="0,0,0,8">
+                                <Run Text="{Binding Selected.NoText, Mode=OneWay}"/><Run Text="  ・  "/><Run Text="{Binding Selected.Category, Mode=OneWay}"/>
+                            </TextBlock>
+                            <TextBlock Text="{Binding Selected.Description}" TextWrapping="Wrap" Margin="0,0,0,12"/>
+                        </StackPanel>
+                        <Button Style="{StaticResource EsPlaceButton}" Content="選択中のアイテムに付ける" Command="{Binding ApplyCommand}"/>
+                        <CheckBox IsChecked="{Binding Append}" Foreground="{StaticResource EsText}" Margin="0,10,0,0"
+                                  Content="前のエフェクトは残して、うしろに追加する"/>
+                        <TextBlock Text="{Binding Message}" Foreground="{StaticResource EsAccent}" FontSize="12" TextWrapping="Wrap" Margin="0,10,0,0"/>
+                    </StackPanel>
+                </DockPanel>
+            </Border>
+        </Grid>
+    </Grid>
+</UserControl>

@@ -241,6 +241,90 @@ public static class ShapeThumbRenderer
     }
 
     /// <summary>専用の描画先に描いて、画像として取り出す。何も描かれなかったら null</summary>
+    // ------------------------------------------------------------------ 同梱の映像エフェクト(サンプル画像にかけたサムネイル)
+    const int FW = 320, FH = 180;
+
+    /// <summary>
+    /// サンプル画像に、同梱の映像エフェクトをかけた絵(320×180)。登場・退場のように時間で変わるものもあるので、
+    /// いくつかの時間で描いて、かける前といちばん違って見える時間を選ぶ。描けない時は null(理由は LastError)
+    /// </summary>
+    public static BitmapSource? RenderVideoEffect(Type type, BitmapSource sample)
+    {
+        LastError = "";
+        string stage = "start";
+        try
+        {
+            if (Activator.CreateInstance(type) is not YmmExplorer.Fx.FxVideoEffectBase fx) { LastError = "同梱の映像エフェクトではありません"; return null; }
+            stage = "devices"; var dc = Devices().DeviceContext;
+            stage = "pixels"; BitmapSource src = sample.Format == PixelFormats.Pbgra32 ? sample : new FormatConvertedBitmap(sample, PixelFormats.Pbgra32, null, 0);
+            int sw = src.PixelWidth, sh = src.PixelHeight, stride = sw * 4;
+            var px = new byte[stride * sh];
+            src.CopyPixels(px, stride, 0);
+            var pf = new Vortice.DCommon.PixelFormat(Vortice.DXGI.Format.B8G8R8A8_UNorm, Vortice.DCommon.AlphaMode.Premultiplied);
+            var pin = GCHandle.Alloc(px, GCHandleType.Pinned);
+            ID2D1Bitmap1 bmp; stage = "bitmap";
+            try { bmp = dc.CreateBitmap(new Vortice.Mathematics.SizeI(sw, sh), IntPtr.Zero, 0, new BitmapProperties1(pf, 96, 96, BitmapOptions.None)); bmp.CopyFromMemory(pin.AddrOfPinnedObject(), stride); }
+            finally { pin.Free(); }
+            using (bmp)
+            {
+                stage = "kit"; using var kit = new YmmExplorer.Fx.FxKit(dc);
+                float scale = Math.Min(FW / (float)sw, FH / (float)sh);
+                var place = Matrix3x2.CreateScale(scale) * Matrix3x2.CreateTranslation((FW - sw * scale) / 2f, (FH - sh * scale) / 2f);
+                var b = dc.GetImageLocalBounds(bmp);
+                kit.NoiseArea = b;
+                stage = "plain"; var plain = Capture(dc, FW, FH, () => { dc.Transform = place; dc.DrawImage(bmp); });
+                const int len = 180, fps = 60;
+                BitmapSource? best = null;
+                double bestDiff = -1;
+                string err = "";
+                stage = "frames";
+                foreach (int frame in new[] { 90, 30, 150, 12, 168, 60, 120 })
+                {
+                    BitmapSource? shot = null;
+                    try
+                    {
+                        var f = new YmmExplorer.Fx.FxFrame { Frame = frame, Length = len, Fps = fps, B = b };
+                        shot = Capture(dc, FW, FH, () =>
+                        {
+                            var img = fx.Build(kit, bmp, f);
+                            dc.Transform = place;
+                            dc.DrawImage(img);
+                        });
+                    }
+                    catch (Exception ex) { err = ex.GetBaseException().Message; }
+                    finally { try { kit.EndFrame(); } catch { } }
+                    if (shot == null) continue;
+                    // 違いが大きいほど分かりやすいが、画面全体が別の色に変わった絵(真っ白の光など)は、何のエフェクトか分かりにくいので下げる
+                    double d = plain == null ? 1 : Difference(plain, shot);
+                    if (d > 150) d = 300 - d;
+                    if (d > bestDiff + 1e-6) { bestDiff = d; best = shot; }
+                }
+                try { kit.EndFrame(); kit.EndFrame(); } catch { }
+                if (best == null) LastError = err.Length > 0 ? err : "絵を描けませんでした";
+                return best;
+            }
+        }
+        catch (Exception ex) { LastError = "[" + stage + "] " + ex.GetBaseException().Message; return null; }
+        finally { if (sessions == 0) ReleaseDevices(); }
+    }
+
+    /// <summary>2つの絵の違い(間引いて比べた、明るさの差の平均)</summary>
+    static double Difference(BitmapSource a, BitmapSource b)
+    {
+        int w = Math.Min(a.PixelWidth, b.PixelWidth), h = Math.Min(a.PixelHeight, b.PixelHeight), stride = w * 4;
+        var pa = new byte[stride * h]; var pb = new byte[stride * h];
+        a.CopyPixels(new Int32Rect(0, 0, w, h), pa, stride, 0); b.CopyPixels(new Int32Rect(0, 0, w, h), pb, stride, 0);
+        long sum = 0; int n = 0;
+        for (int y = 0; y < h; y += 5)
+            for (int x = 0; x < w; x += 5)
+            {
+                int i = y * stride + x * 4;
+                sum += Math.Abs(pa[i] - pb[i]) + Math.Abs(pa[i + 1] - pb[i + 1]) + Math.Abs(pa[i + 2] - pb[i + 2]);
+                n++;
+            }
+        return n == 0 ? 0 : sum / (double)n;
+    }
+
     static BitmapSource? Capture(ID2D1DeviceContext dc, int w, int h, Action draw)
     {
         var pf = new Vortice.DCommon.PixelFormat(Vortice.DXGI.Format.B8G8R8A8_UNorm, Vortice.DCommon.AlphaMode.Premultiplied);

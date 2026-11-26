@@ -250,8 +250,9 @@ public static class TabGroups
         s => s.EffectShapeTabConfigs, (s, v) => s.EffectShapeTabConfigs = v,
         s => s.EffectShapeTabNames, plainFirstName: true);
 
-    public static TabGroup VideoEffect { get; } = new(TabKind.VideoEffect, "映像エフェクト",
-        s => s.VideoEffectTabCount, (s, v) => s.VideoEffectTabCount = v,
+    // 映像・音声エフェクトのタブは、同梱の演出エフェクトを並べる「エフェクト」タブ1つにまとめた(タブの数は1つだけ)
+    public static TabGroup VideoEffect { get; } = new(TabKind.VideoEffect, "エフェクト",
+        s => 1, (s, v) => { },
         s => s.VideoEffectTabConfigs, (s, v) => s.VideoEffectTabConfigs = v,
         s => s.VideoEffectTabNames, plainFirstName: true);
 
@@ -307,7 +308,7 @@ public static class TabGroups
         _ => Preset,
     };
 
-    public static TabGroup[] All => new[] { Explorer, Template, Preset, EffectShape, VideoEffect, AudioEffect, Text, YmmSettings, Material, Item, Shortcut, AiEdit };
+    public static TabGroup[] All => new[] { Explorer, Template, Preset, EffectShape, VideoEffect, Text, YmmSettings, Material, Item, Shortcut, AiEdit };
 
     /// <summary>いまタブバーに表示されているタブの合計</summary>
     public static int TotalVisible() => All.Sum(g => g.VisibleTabs.Count);

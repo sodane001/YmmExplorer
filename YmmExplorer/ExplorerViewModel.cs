@@ -721,6 +721,8 @@ public class ExplorerViewModel : NotifyBase, IDisposable
         TextLib = new EffectLibraryVm(this, TabKind.Text);
         Materials = new MaterialLibraryVm();
         EffectShapes = new EffectShapeBrowserVm(PlaceShapeByKeyAsync, PlacePvRecipeAsync, settings.IsShapeShown);
+        FxBrowser = new FxBrowserVm(settings);
+        _ = FxCatalog.EnsureAsync(settings.FxSampleImage ?? "");     // 初回だけ、サンプル画像にエフェクトをかけたサムネイルを作る
         _ = EffectShapeCatalog.EnsureAsync();       // 初回だけ、全図形のサムネイルを作ってプラグインフォルダーに保存する
         ItemEditor = new ItemEditorVm(() => ShowItemView);
         TextSplit.Done += text => { StatusText = text; ItemEditor.Rebuild(); };
@@ -750,6 +752,8 @@ public class ExplorerViewModel : NotifyBase, IDisposable
         }
         // 前回「図形」タブを開いていた時は、それに代わる「演出図形」タブを開く
         if (saved?.Kind == TabKind.Shape) saved = saved with { Kind = TabKind.EffectShape, Slot = 1 };
+        // 映像・音声エフェクトのタブは「エフェクト」タブ1つにまとめた
+        if (saved?.Kind is TabKind.VideoEffect or TabKind.AudioEffect) saved = saved with { Kind = TabKind.VideoEffect, Slot = 1 };
         if (saved != null && WindowTabs.VisibleTabs(TabGroups.Of(saved.Kind)).Any(t => t.Slot == saved.Slot))
         {
             selectedKind = saved.Kind;
@@ -837,6 +841,7 @@ public class ExplorerViewModel : NotifyBase, IDisposable
         AudioFx.Dispose();
         TextLib.Dispose();
         EffectShapes.Dispose();
+        FxBrowser.Dispose();
         foreach (var g in TabGroups.All) g.TabsChanged -= OnTabsChanged;
         WindowTabs.Changed -= OnTabsChanged;
         foreach (var list in TabToggles.Values) foreach (var t in list) t.Detach();
@@ -1036,6 +1041,8 @@ public class ExplorerViewModel : NotifyBase, IDisposable
     public TabGroup ShapeGroup => TabGroups.Shape;
     /// <summary>演出図形のタブ(分類で絞って配置するだけの、読み取り専用のタブ)</summary>
     public EffectShapeBrowserVm EffectShapes { get; }
+    /// <summary>エフェクトタブ(同梱の演出エフェクト)</summary>
+    public FxBrowserVm FxBrowser { get; }
     public bool IsEffectShapeTab => selectedKind == TabKind.EffectShape;
     public bool ShowEffectShapeView => IsEffectShapeTab && !isSettingsPageOpen;
     public bool ShowExplorerView => IsExplorerTab && !isSettingsPageOpen;
@@ -1065,6 +1072,7 @@ public class ExplorerViewModel : NotifyBase, IDisposable
     void SelectTab(TabKind kind, int slot, bool closeSettings)
     {
         if (kind == TabKind.Shape) { kind = TabKind.EffectShape; slot = 1; }     // 「図形」タブは「演出図形」タブに統合した
+        if (kind is TabKind.VideoEffect or TabKind.AudioEffect) { kind = TabKind.VideoEffect; slot = 1; }     // エフェクトのタブは1つにまとめた
         slot = Math.Clamp(slot, 1, TabGroups.Of(kind).Count);
         var wasSettings = isSettingsPageOpen;
         if (closeSettings) isSettingsPageOpen = false;     // タブを選んだら設定画面は閉じる
@@ -1096,7 +1104,7 @@ public class ExplorerViewModel : NotifyBase, IDisposable
                 _ = EnsureShapesAsync(false);
                 break;
             case TabKind.EffectShape: EffectShapes.Refresh(); break;
-            case TabKind.VideoEffect: VideoFx.Reload(); break;
+            case TabKind.VideoEffect: FxBrowser.Refresh(); break;
             case TabKind.AudioEffect: AudioFx.Reload(); break;
             case TabKind.Text: TextLib.Reload(); break;
             case TabKind.YmmSettings:
