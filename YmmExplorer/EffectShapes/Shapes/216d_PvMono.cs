@@ -70,7 +70,7 @@ internal sealed class Ink3D(Sculpt m, PvStage.Setup s) : IInk
 internal sealed class PvMono
 {
     /// <summary>白黒の図形の仲間か(紙とインクの配色・暗くしない・光を当てない、の対象)</summary>
-    public static bool IsMono(PvScene x) => x == PvScene.MonoGeo || (x >= PvScene.MonoCircle && x <= PvScene.MonoRandom2) || (x >= PvScene.MonoSymbol && x <= PvScene.MonoAlt);
+    public static bool IsMono(PvScene x) => x == PvScene.MonoGeo || (x >= PvScene.MonoCircle && x <= PvScene.MonoRandom2) || (x >= PvScene.MonoSymbol && x <= PvScene.MonoAlt) || (x >= PvScene.MonoRecord && x <= PvScene.MonoBlocks);
 
     readonly IInk k;
     readonly PvStage.Setup s;
@@ -118,6 +118,14 @@ internal sealed class PvMono
             case PvScene.MonoMap: MapLayout(); break;
             case PvScene.MonoSignal: SignalLayout(); break;
             case PvScene.MonoAlt: AltLayout(); break;
+            case PvScene.MonoRecord: RecordLayout(); break;
+            case PvScene.MonoConstellation: ConstellationLayout(); break;
+            case PvScene.MonoCircuit: CircuitLayout(); break;
+            case PvScene.MonoClock: ClockLayout(); break;
+            case PvScene.MonoGraph: GraphPaperLayout(); break;
+            case PvScene.MonoSun: SunLayout(); break;
+            case PvScene.MonoWaves: WavesLayout(); break;
+            case PvScene.MonoBlocks: BlocksLayout(); break;
             default: Classic(); break;
         }
     }
@@ -854,5 +862,113 @@ internal sealed class PvMono
         HalfMoon(-660f, -150f, 90f);
         SpinSquares(-880f, 330f, 9, 26f, 80f);
         DiamondRow(300f, 330f, 8, 18f, 70f);
+    }
+
+    // ---------------------------------------------------------------- v127 で足した部品と配置
+    /// <summary>電子回路のような、折れ曲がった線と端の点</summary>
+    void Traces(int n, int key)
+    {
+        for (int i = 0; i < n; i++)
+        {
+            int id = i + key; bool left = R(id, 70) < .5f;
+            float y0 = (R(id, 71) - .5f) * 900f, x0 = left ? -940f : 940f, xm = (left ? -1f : 1f) * (300f + R(id, 72) * 500f), y1 = y0 + (R(id, 73) - .5f) * 300f;
+            if (MathF.Abs(y1) < 160f) y1 = MathF.Sign(y1 == 0f ? 1f : y1) * 160f;
+            L(x0, y0, xm, y0, 2f, 20f); L(xm, y0, xm, y1, 2f, 20f);
+            if ((i + st) % 3 == 0) D(xm, y1, 8f, 24f); else O(xm, y1, 7f, 2f, 24f);
+        }
+    }
+
+    /// <summary>時計の針(拍ごとに長い針が30度進む)</summary>
+    void Hands(float cx, float cy, float r)
+    {
+        float a = st * MathF.PI / 6f - MathF.PI / 2f, b = st * MathF.PI / 72f - MathF.PI / 2f;
+        L(cx, cy, cx + MathF.Cos(a) * r * .85f, cy + MathF.Sin(a) * r * .85f, 4f, 50f);
+        L(cx, cy, cx + MathF.Cos(b) * r * .55f, cy + MathF.Sin(b) * r * .55f, 7f, 52f);
+        D(cx, cy, 9f, 54f);
+    }
+
+    /// <summary>折れ線グラフ(拍ごとに点が1つ進む)</summary>
+    void Graph(float x0, float y0, float w, float h, int n)
+    {
+        L(x0, y0 + h, x0 + w, y0 + h, LW, 20f); L(x0, y0, x0, y0 + h, LW, 20f);
+        float px = 0f, py = 0f; int vis = 1 + st % n;
+        for (int i = 0; i < vis; i++)
+        {
+            float x = x0 + i * w / (n - 1), y = y0 + h - h * (.15f + .8f * R(i + st / n * 37, 74));
+            if (i > 0) L(px, py, x, y, 2.4f, 24f);
+            D(x, y, 6f, 26f); px = x; py = y;
+        }
+    }
+
+    void RecordLayout()
+    {
+        Barcode(-880f, -440f, 420f, 110f);
+        Ruler(-280f, -940f, -360f, 1f);
+        DotFade(380f, -440f, 12, 3, 40f);
+        Progress(-880f, 330f, 500f, 46f, 10);
+        EqBars(440f, 420f, 16, 20f, 8f, 130f);
+    }
+
+    void ConstellationLayout()
+    {
+        Corners(28f, 60f);
+        Network(-900f, -460f, 760f, 300f, 10, 77);
+        Network(140f, 120f, 760f, 320f, 10, 155);
+        for (int i = 0; i < 12; i++)
+        {
+            float x = (R(i, 80) - .5f) * 1800f, y = (R(i, 81) - .5f) * 980f;
+            if (MathF.Abs(x) < 420f && MathF.Abs(y) < 200f) continue;
+            Star(x, y, 10f + R(i, 82) * 8f, i, true);
+        }
+    }
+
+    void CircuitLayout()
+    {
+        CellGrid(-880f, -460f, 6, 3, 52f);
+        Traces(12, 5);
+        Checker(500f, 380f, 10, 2, 30f);
+    }
+
+    void ClockLayout()
+    {
+        TickRing(560f, 0f, 260f);
+        Hands(560f, 0f, 220f);
+        HalfMoon(-640f, -250f, 80f);
+        Progress(-880f, 320f, 480f, 40f, 12);
+    }
+
+    void GraphPaperLayout()
+    {
+        PlusGrid(40f, 4f);
+        Corners(28f, 60f);
+        Crosshair(620f, -260f, 80f);
+        Graph(-880f, 160f, 700f, 280f, 12);
+    }
+
+    void SunLayout()
+    {
+        SunRays(-560f, -120f, 140f, 32);
+        Concentric(-560f, -120f, 90f, 4);
+        SunRays(640f, 280f, 80f, 20);
+        DiamondRow(400f, -430f, 7, 16f, 64f);
+        Wave(-940f, 940f, 440f, 20f, 300f);
+    }
+
+    void WavesLayout()
+    {
+        Wave(-940f, 940f, -420f, 26f, 380f);
+        Wave(-940f, 940f, -370f, 18f, 240f);
+        Zigzag(-940f, 940f, -300f, 20f, 40f);
+        Wave(-940f, 940f, 300f, 30f, 420f);
+        Wave(-940f, 940f, 350f, 20f, 300f);
+        Zigzag(-940f, 940f, 420f, 20f, 40f);
+    }
+
+    void BlocksLayout()
+    {
+        Checker(-880f, -460f, 8, 3, 40f);
+        Tris(-860f, 120f, 3, 90f, 92f);
+        SpinSquares(300f, -420f, 6, 28f, 90f);
+        NestSquares(640f, 260f, 150f, 4);
     }
 }

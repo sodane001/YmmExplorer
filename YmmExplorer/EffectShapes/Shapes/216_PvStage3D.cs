@@ -227,6 +227,108 @@ public enum PvScene
     [Display(Name = "ゆがむ市松")] PtWarpCheck,
     [Display(Name = "回る花びら")] PtPetalRing,
     [Display(Name = "円形のイコライザー")] PtCircleEq,
+    // v127 で足した3Dの背景
+    [Display(Name = "結び目 4-5")] CvKnot45,
+    [Display(Name = "結び目 2-7")] CvKnot27,
+    [Display(Name = "結び目 5-7")] CvKnot57,
+    [Display(Name = "結び目 3-4")] CvKnot34,
+    [Display(Name = "リサージュ 1-3")] CvLis13,
+    [Display(Name = "リサージュ 2-5")] CvLis25,
+    [Display(Name = "リサージュ 4-5")] CvLis45,
+    [Display(Name = "リサージュ 5-6")] CvLis56,
+    [Display(Name = "バラ曲線 4枚")] CvRose4,
+    [Display(Name = "バラ曲線 5/2")] CvRose52,
+    [Display(Name = "バラ曲線 5/3")] CvRose53,
+    [Display(Name = "バラ曲線 6/5")] CvRose65,
+    [Display(Name = "球を巻くらせん 9")] CvLoxo9,
+    [Display(Name = "円すいのらせん 12")] CvCone12,
+    [Display(Name = "コイルの輪 5")] CvCoil5,
+    [Display(Name = "コイルの輪 24")] CvCoil24,
+    [Display(Name = "波打つ無限の輪")] CvInf5,
+    [Display(Name = "内転サイクロイド 8-3")] CvHypo83,
+    [Display(Name = "内転サイクロイド 9-5")] CvHypo95,
+    [Display(Name = "星の曲線 3")] CvStar3,
+    [Display(Name = "星の曲線 4")] CvStar4,
+    [Display(Name = "星の曲線 6")] CvStar6,
+    [Display(Name = "星の曲線 7")] CvStar7,
+    [Display(Name = "ばね 4巻き")] CvSpring4,
+    [Display(Name = "ばね 8巻き")] CvSpring8,
+    [Display(Name = "蝶の曲線")] CvButterfly,
+    [Display(Name = "カージオイド")] CvCardioid,
+    [Display(Name = "波打つ輪 6")] CvWaveRing6,
+    [Display(Name = "波打つ輪 10")] CvWaveRing10,
+    [Display(Name = "十字の殻")] ShCross,
+    [Display(Name = "とげの球")] ShSpiky,
+    [Display(Name = "宝石")] ShGem,
+    [Display(Name = "糸巻き")] ShSpindle,
+    [Display(Name = "波打つ球")] ShWavy,
+    [Display(Name = "おわん")] ShBowl,
+    [Display(Name = "巻き貝")] ShShell,
+    [Display(Name = "四面体の殻")] ShTetra,
+    [Display(Name = "立体の花火")] FxFireworks,
+    [Display(Name = "スノードーム")] FxSnowGlobe,
+    [Display(Name = "メリーゴーランド")] FxCarousel,
+    [Display(Name = "落ちる積み木")] FxBlocks,
+    [Display(Name = "ジャイロ")] FxGyro,
+    [Display(Name = "重なる輪")] FxRingStack,
+    [Display(Name = "流星群")] FxMeteors,
+    [Display(Name = "回る板")] FxPlates,
+    [Display(Name = "脈打つ球")] FxPulseSphere,
+    [Display(Name = "星のトンネル")] FxStarTun,
+    [Display(Name = "八角のトンネル")] FxOctTun,
+    [Display(Name = "ジグザグの道")] FxRoad,
+    [Display(Name = "れんがの塔")] FxTower,
+    // v127 で足した2Dの背景
+    [Display(Name = "白黒の図形 記録")] MonoRecord,
+    [Display(Name = "白黒の図形 星座")] MonoConstellation,
+    [Display(Name = "白黒の図形 回路")] MonoCircuit,
+    [Display(Name = "白黒の図形 時計")] MonoClock,
+    [Display(Name = "白黒の図形 方眼紙")] MonoGraph,
+    [Display(Name = "白黒の図形 太陽")] MonoSun,
+    [Display(Name = "白黒の図形 波")] MonoWaves,
+    [Display(Name = "白黒の図形 積み木")] MonoBlocks,
+    [Display(Name = "回る丸")] TlSpinCircle,
+    [Display(Name = "回る四角")] TlSpinSquare,
+    [Display(Name = "回る三角")] TlSpinTri,
+    [Display(Name = "回る六角形")] TlSpinHex,
+    [Display(Name = "回る星")] TlSpinStar,
+    [Display(Name = "回るハート")] TlSpinHeart,
+    [Display(Name = "回るひし形")] TlSpinDiamond,
+    [Display(Name = "回る十字")] TlSpinCross,
+    [Display(Name = "回る輪")] TlSpinRing,
+    [Display(Name = "回る半円")] TlSpinHalf,
+    [Display(Name = "回る花")] TlSpinFlower,
+    [Display(Name = "回る矢印")] TlSpinArrow,
+    [Display(Name = "降る丸")] TlFallCircle,
+    [Display(Name = "降る四角")] TlFallSquare,
+    [Display(Name = "降る三角")] TlFallTri,
+    [Display(Name = "降る六角形")] TlFallHex,
+    [Display(Name = "降る星")] TlFallStar,
+    [Display(Name = "降るハート")] TlFallHeart,
+    [Display(Name = "降るひし形")] TlFallDiamond,
+    [Display(Name = "降る十字")] TlFallCross,
+    [Display(Name = "降る輪")] TlFallRing,
+    [Display(Name = "降る半円")] TlFallHalf,
+    [Display(Name = "降る花")] TlFallFlower,
+    [Display(Name = "降る矢印")] TlFallArrow,
+    [Display(Name = "ハチの巣")] PtHoney,
+    [Display(Name = "三角のモザイク")] PtMosaic,
+    [Display(Name = "アーガイル")] PtArgyle,
+    [Display(Name = "流れる水玉")] PtDiagDots,
+    [Display(Name = "うねる方眼")] PtWaveGrid,
+    [Display(Name = "広がる四角")] PtSquareZoom,
+    [Display(Name = "うずの腕")] PtPinwheel,
+    [Display(Name = "光の輪と放射")] PtSunCircles,
+    [Display(Name = "ピクセル")] PtPixels,
+    [Display(Name = "ワープ")] PtWarp,
+    [Display(Name = "泡の柱")] PtBubbleCols,
+    [Display(Name = "紙テープ")] PtStreamers,
+    [Display(Name = "市松のトンネル")] PtCheckTunnel,
+    [Display(Name = "極座標の方眼")] PtPolar,
+    [Display(Name = "波の点")] PtWaveDots,
+    [Display(Name = "ふんわり丸")] PtSoftBlobs,
+    [Display(Name = "交差する斜線")] PtCrossHatch,
+    [Display(Name = "うずの線")] PtSpiralLines,
 }
 
 /// <summary>背景の種類が2Dかどうか(プラグインの外からも使う)</summary>
@@ -882,6 +984,56 @@ internal sealed class PvStage(PvStage.Setup s)
             case PvScene.FxTriTun: FieldScene(11); break;
             case PvScene.FxRiseBars: FieldScene(12); break;
             case PvScene.FxIslands: FieldScene(13); break;
+            case PvScene.CvKnot45: CurveScene(0, 4f, 5f); break;
+            case PvScene.CvKnot27: CurveScene(0, 2f, 7f); break;
+            case PvScene.CvKnot57: CurveScene(0, 5f, 7f); break;
+            case PvScene.CvKnot34: CurveScene(0, 3f, 4f); break;
+            case PvScene.CvLis13: CurveScene(1, 1f, 3f); break;
+            case PvScene.CvLis25: CurveScene(1, 2f, 5f); break;
+            case PvScene.CvLis45: CurveScene(1, 4f, 5f); break;
+            case PvScene.CvLis56: CurveScene(1, 5f, 6f); break;
+            case PvScene.CvRose4: CurveScene(2, 2f, 1f); break;
+            case PvScene.CvRose52: CurveScene(2, 5f, 2f); break;
+            case PvScene.CvRose53: CurveScene(2, 5f, 3f); break;
+            case PvScene.CvRose65: CurveScene(2, 6f, 5f); break;
+            case PvScene.CvLoxo9: CurveScene(3, 9f, 0f); break;
+            case PvScene.CvCone12: CurveScene(4, 12f, 0f); break;
+            case PvScene.CvCoil5: CurveScene(7, 5f, 0f); break;
+            case PvScene.CvCoil24: CurveScene(7, 24f, 0f); break;
+            case PvScene.CvInf5: CurveScene(5, 5f, 0f); break;
+            case PvScene.CvHypo83: CurveScene(6, 8f, 3f); break;
+            case PvScene.CvHypo95: CurveScene(6, 9f, 5f); break;
+            case PvScene.CvStar3: CurveScene(9, 3f, 0f); break;
+            case PvScene.CvStar4: CurveScene(9, 4f, 0f); break;
+            case PvScene.CvStar6: CurveScene(9, 6f, 0f); break;
+            case PvScene.CvStar7: CurveScene(9, 7f, 0f); break;
+            case PvScene.CvSpring4: CurveScene(10, 4f, 0f); break;
+            case PvScene.CvSpring8: CurveScene(10, 8f, 0f); break;
+            case PvScene.CvButterfly: CurveScene(11, 0f, 0f); break;
+            case PvScene.CvCardioid: CurveScene(12, 0f, 0f); break;
+            case PvScene.CvWaveRing6: CurveScene(13, 6f, 0f); break;
+            case PvScene.CvWaveRing10: CurveScene(13, 10f, 0f); break;
+            case PvScene.ShCross: ShellScene(14); break;
+            case PvScene.ShSpiky: ShellScene(15); break;
+            case PvScene.ShGem: ShellScene(16); break;
+            case PvScene.ShSpindle: ShellScene(17); break;
+            case PvScene.ShWavy: ShellScene(18); break;
+            case PvScene.ShBowl: ShellScene(19); break;
+            case PvScene.ShShell: ShellScene(20); break;
+            case PvScene.ShTetra: ShellScene(21); break;
+            case PvScene.FxFireworks: FieldScene(14); break;
+            case PvScene.FxSnowGlobe: FieldScene(15); break;
+            case PvScene.FxCarousel: FieldScene(16); break;
+            case PvScene.FxBlocks: FieldScene(17); break;
+            case PvScene.FxGyro: FieldScene(18); break;
+            case PvScene.FxRingStack: FieldScene(19); break;
+            case PvScene.FxMeteors: FieldScene(20); break;
+            case PvScene.FxPlates: FieldScene(21); break;
+            case PvScene.FxPulseSphere: FieldScene(22); break;
+            case PvScene.FxStarTun: FieldScene(23); break;
+            case PvScene.FxOctTun: FieldScene(24); break;
+            case PvScene.FxRoad: FieldScene(25); break;
+            case PvScene.FxTower: FieldScene(26); break;
             default: Float(); break;
         }
         faces.Sort(static (a, b) => b.Z.CompareTo(a.Z));
@@ -1551,6 +1703,14 @@ internal sealed class PvStage(PvStage.Setup s)
                     float x = 16f * MathF.Pow(MathF.Sin(t), 3), y = 13f * MathF.Cos(t) - 5f * MathF.Cos(2 * t) - 2f * MathF.Cos(3 * t) - MathF.Cos(4 * t);
                     return new Vector3(x, y, MathF.Sin(t * 2f) * 4f) * .42f;
                 }
+            case 10: return new Vector3(MathF.Cos(p * t) * 3.2f, (t / MathF.Tau - .5f) * 14f, MathF.Sin(p * t) * 3.2f);
+            case 11:
+                {
+                    float r = MathF.Exp(MathF.Cos(t)) - 2f * MathF.Cos(4f * t) + MathF.Pow(MathF.Sin(t / 12f), 5);
+                    return new Vector3(MathF.Sin(t) * r * 2.1f, MathF.Cos(t) * r * 2.1f - 1f, MathF.Sin(t * .5f) * 2f);
+                }
+            case 12: { float r = 1f - MathF.Cos(t); return new Vector3((r * MathF.Cos(t) + .9f) * 4.5f, r * MathF.Sin(t) * 4.5f, MathF.Sin(2f * t) * 1.5f); }
+            case 13: return new Vector3(MathF.Cos(t) * 7.5f, MathF.Sin(p * t) * 1.8f, MathF.Sin(t) * 7.5f);
             default: { float r = 6f * (1f + .38f * MathF.Cos(p * t)); return new Vector3(r * MathF.Cos(t), r * MathF.Sin(t), MathF.Sin(p * t) * 1.6f); }
         }
     }
@@ -1558,7 +1718,7 @@ internal sealed class PvStage(PvStage.Setup s)
     void CurveScene(int kind, float p, float q)
     {
         int n = Math.Clamp(s.N * 2, 60, 400); var c = new Vector3(0, 0, 17f);
-        float range = kind is 2 or 6 ? MathF.Tau * q : MathF.Tau, flow = s.T * .04f * s.Spin + s.Dist * .01f;
+        float range = kind is 2 or 6 ? MathF.Tau * q : kind == 11 ? MathF.Tau * 2f : MathF.Tau, flow = s.T * .04f * s.Spin + s.Dist * .01f;
         var rot = Quaternion.CreateFromYawPitchRoll(s.T * s.Spin * .25f, .35f + MathF.Sin(s.T * .2f) * .2f, 0f);
         float sz = .2f * s.Size * (1f + s.Flash * .2f);
         for (int i = 0; i < n; i++)
@@ -1602,6 +1762,27 @@ internal sealed class PvStage(PvStage.Setup s)
                     if (i % 3 != 0) return sph * .7f;
                     float b = u * MathF.Tau * 7f; var ring = new Vector3(MathF.Cos(b) * 1.5f, 0f, MathF.Sin(b) * 1.5f);
                     return Vector3.Transform(ring, Quaternion.CreateFromAxisAngle(Vector3.UnitX, .45f));
+                }
+            case 14:
+                {
+                    int arm = i % 3; float w = .22f;
+                    return arm == 0 ? new(y, MathF.Cos(a) * w, MathF.Sin(a) * w) : arm == 1 ? new(MathF.Cos(a) * w, y, MathF.Sin(a) * w) : new(MathF.Cos(a) * w, MathF.Sin(a) * w, y);
+                }
+            case 15: { float th = MathF.Atan2(sph.Z, sph.X); return sph * (1f + .45f * MathF.Pow(MathF.Abs(MathF.Sin(5f * th) * MathF.Cos(3f * MathF.Asin(Math.Clamp(y, -1f, 1f)))), 3f)); }
+            case 16:
+                {
+                    float rr = y > .35f ? (1f - y) / .65f * .7f : (y + 1f) / 1.35f, th = Mod(a, MathF.PI / 3f) - MathF.PI / 6f, rh = MathF.Cos(MathF.PI / 6f) / MathF.Cos(th);
+                    return new(MathF.Cos(a) * rr * rh, y * 1.1f, MathF.Sin(a) * rr * rh);
+                }
+            case 17: { float rr = 1f - MathF.Abs(y); return new(MathF.Cos(a) * rr * .8f, y * 1.25f, MathF.Sin(a) * rr * .8f); }
+            case 18: { float th = MathF.Atan2(sph.Z, sph.X), lat = MathF.Asin(Math.Clamp(y, -1f, 1f)); return sph * (1f + .2f * MathF.Sin(6f * th + s.T * 2f) * MathF.Cos(3f * lat)); }
+            case 19: return new(sph.X, -MathF.Abs(sph.Y) * .8f + .3f, sph.Z);
+            case 20: { float th = u * MathF.Tau * 3f, rr = .15f + u * .85f; return new(MathF.Cos(th) * rr * (1f + MathF.Cos(a) * .3f), (u - .5f) * 1.6f + MathF.Sin(a) * .25f * rr, MathF.Sin(th) * rr * (1f + MathF.Cos(a) * .3f)); }
+            case 21:
+                {
+                    Vector3[] nk = [Vector3.Normalize(new(1, 1, 1)), Vector3.Normalize(new(-1, -1, 1)), Vector3.Normalize(new(-1, 1, -1)), Vector3.Normalize(new(1, -1, -1))];
+                    float mx = 0f; foreach (var v in nk) mx = MathF.Max(mx, Vector3.Dot(sph, v));
+                    return sph / MathF.Max(mx, .05f) * .45f;
                 }
             default:
                 {
@@ -1730,6 +1911,141 @@ internal sealed class PvStage(PvStage.Setup s)
                             float x = k * 1.6f * s.Spread, z = 4f + j * 2.4f, h = .4f + 3f * MathF.Abs(MathF.Sin(s.T * 2f * s.Spin + k * .5f + j * .7f)) * (1f + s.Flash * .4f);
                             Add(PvMesh.Cube, new(x, -3f + h, z), Quaternion.Identity, new(.55f, h, .55f), Ramp(h / 3.4f));
                         }
+                }
+                break;
+            case 14: // 立体の花火
+                for (int b = 0; b < 5; b++)
+                {
+                    float per = 2.2f + R(b, 30), tt = s.T * SpinAbs / per + R(b, 31), ph = Mod(tt, 1f); int id = b * 17 + (int)MathF.Floor(tt) * 101;
+                    var c = new Vector3((R(id, 32) - .5f) * 22f, (R(id, 33) - .5f) * 10f + 2f, 14f + R(id, 34) * 14f); int m2 = n / 5;
+                    float k = 1f - (1f - ph) * (1f - ph) * (1f - ph);
+                    for (int i = 0; i < m2; i++)
+                    {
+                        float yy = 1f - (i + .5f) * 2f / m2, rr = MathF.Sqrt(MathF.Max(0f, 1f - yy * yy)), a = i * 2.39996f;
+                        Add(MeshOf(id + i), c + new Vector3(MathF.Cos(a) * rr, yy - ph * .6f, MathF.Sin(a) * rr) * k * 5f * s.Spread, Tumble(id + i), Shape(.32f * s.Size * (1f - ph * .7f)), Col3(b));
+                    }
+                }
+                break;
+            case 15: // スノードーム
+                {
+                    var c = new Vector3(0, 0, 17f);
+                    for (int i = 0; i < n; i++)
+                    {
+                        float yy = 6f - Mod(R(i, 0) * 12f + s.T * (.6f + R(i, 1)) * SpinAbs, 12f), lim = MathF.Sqrt(MathF.Max(0f, 36f - yy * yy)), r = lim * MathF.Sqrt(R(i, 2)), a = R(i, 3) * MathF.Tau + s.T * s.Spin * (.3f + R(i, 4) * .5f);
+                        Add(MeshOf(i), c + new Vector3(MathF.Cos(a) * r, yy, MathF.Sin(a) * r) * s.Spread, Tumble(i), Shape(.2f * s.Size), Pick(i));
+                    }
+                    Add(PvMesh.Cube, c + new Vector3(0, -6.6f * s.Spread, 0), Quaternion.Identity, new(5f * s.Spread, .5f, 5f * s.Spread), s.Pal.C * .7f);
+                }
+                break;
+            case 16: // メリーゴーランド
+                {
+                    var c = new Vector3(0, -1f, 19f); int m2 = Math.Clamp(s.N / 10, 8, 20); float rad = 7f * s.Spread, rot = s.T * s.Spin * .5f;
+                    Add(PvMesh.Pyramid, c + new Vector3(0, 7f, 0), AxisY(rot), new(rad * .75f, 1.1f, rad * .75f), s.Pal.C * .85f);
+                    Add(PvMesh.Prism6, c, AxisX(MathF.PI / 2f) * AxisZ(rot), new(rad * 1.05f, rad * 1.05f, .3f), s.Pal.B * .8f);
+                    for (int k = 0; k < m2; k++)
+                    {
+                        float a = rot + k * MathF.Tau / m2, bob = MathF.Sin(s.T * 2.4f + k * 1.3f) * 1.1f; var p0 = c + new Vector3(MathF.Cos(a) * rad, 0, MathF.Sin(a) * rad);
+                        Add(PvMesh.Cube, p0 + new Vector3(0, 3.2f, 0), Quaternion.Identity, new(.06f, 3.2f, .06f), s.Pal.C * .8f);
+                        Add(MeshOf(k), p0 + new Vector3(0, 2.2f + bob, 0), AxisY(-a), Shape(.75f * s.Size), Pick(k));
+                    }
+                }
+                break;
+            case 17: // 落ちる積み木
+                {
+                    int cols = 12; float g = 2f * s.Spread;
+                    for (int q = 0; q < cols; q++)
+                        for (int h = 0; h < 5; h++)
+                        {
+                            int id = q * 7 + h; float per = 4f, ph = Mod(s.T * SpinAbs / per + R(q, 40), 1f), land = .1f + h * .12f, y;
+                            if (ph < land) { float f = ph / land; y = 10f - f * f * (10f - (-6f + h * g)); } else y = -6f + h * g;
+                            if (ph > .92f) continue;
+                            Add(PvMesh.Cube, new((q - cols / 2f + .5f) * g, y, 22f + (q % 2) * 2f), Quaternion.Identity, new(g * .46f), Pick(id));
+                        }
+                }
+                break;
+            case 18: // ジャイロ
+                {
+                    var c = new Vector3(0, 0, 17f); int per = Math.Max(12, n / 3);
+                    for (int k = 0; k < 3; k++)
+                    {
+                        var q = Quaternion.CreateFromYawPitchRoll(s.T * s.Spin * (.3f + k * .2f) + k, s.T * s.Spin * (.2f + k * .15f) + k * 1.1f, k * .7f); float r = (4f + k * 1.6f) * s.Spread;
+                        for (int i = 0; i < per; i++) { float a = i * MathF.Tau / per; Add(MeshOf(k * 100 + i), c + Vector3.Transform(new Vector3(MathF.Cos(a) * r, MathF.Sin(a) * r, 0), q), Tumble(k * 100 + i), Shape(.22f * s.Size), Col3(k)); }
+                    }
+                    Add(PvMesh.Icosa, c, AxisY(s.T), new(1.1f * s.Size), s.Pal.C);
+                }
+                break;
+            case 19: // 重なる輪
+                for (int l = 0; l < 9; l++)
+                {
+                    float y = -6f + l * 1.5f, r = (4.5f + MathF.Sin(s.T * 1.6f + l * .7f) * 1.2f) * s.Spread, rot = s.T * s.Spin * (l % 2 == 0 ? .4f : -.4f); int per = 18;
+                    for (int i = 0; i < per; i++) { float a = rot + i * MathF.Tau / per; Add(PvMesh.Cube, new(MathF.Cos(a) * r, y, 18f + MathF.Sin(a) * r), AxisY(-a), new(.5f * s.Size, .18f, .25f * s.Size), Ramp(l / 8f)); }
+                }
+                break;
+            case 20: // 流星群
+                for (int i = 0; i < n / 3; i++)
+                {
+                    float u = Mod(R(i, 0) + s.T * (.15f + R(i, 1) * .2f) * SpinAbs, 1f);
+                    var start = new Vector3(-20f + R(i, 2) * 30f, 12f + R(i, 3) * 4f, 10f + R(i, 4) * 26f); var dir = Vector3.Normalize(new Vector3(1f, -.7f, .1f));
+                    for (int k = 0; k < 3; k++) Add(MeshOf(i), start + dir * (u * 40f - k * .8f), Tumble(i), Shape((.3f - k * .08f) * s.Size), k == 0 ? Vector3.Lerp(Pick(i), Vector3.One, .4f) : Pick(i) * (1f - k * .25f));
+                }
+                break;
+            case 21: // 回る板
+                {
+                    int cols = 11, rows = 6; float g = 2.6f * s.Spread;
+                    for (int r = 0; r < rows; r++)
+                        for (int q = 0; q < cols; q++)
+                        {
+                            float x = (q - (cols - 1) / 2f) * g, y = (r - (rows - 1) / 2f) * g, ang = MathF.Max(0f, MathF.Sin(s.T * 2f * s.Spin - q * .4f - r * .3f)) * MathF.PI;
+                            Add(PvMesh.Cube, new(x, y, 22f), AxisY(ang), new(g * .44f, g * .44f, .08f), (q + r) % 2 == 0 ? s.Pal.A : s.Pal.B);
+                        }
+                }
+                break;
+            case 22: // 脈打つ球
+                {
+                    var c = new Vector3(0, 0, 17f);
+                    for (int i = 0; i < n; i++)
+                    {
+                        float yy = 1f - (i + .5f) * 2f / n, rr = MathF.Sqrt(MathF.Max(0f, 1f - yy * yy)), a = i * 2.39996f + s.T * s.Spin * .2f, w = 1f + .25f * MathF.Sin(yy * 4f - s.T * 4f * SpinAbs);
+                        Add(MeshOf(i), c + new Vector3(MathF.Cos(a) * rr, yy, MathF.Sin(a) * rr) * 5.5f * w * s.Spread, Tumble(i), Shape(.2f * s.Size * w), Ramp(.5f + .5f * MathF.Sin(yy * 4f - s.T * 4f)));
+                    }
+                }
+                break;
+            case 23: // 星のトンネル
+            case 24: // 八角のトンネル
+                {
+                    bool star = kind == 23; int corners = star ? 10 : 8; const float D = 38f; int m2 = Math.Clamp(s.N / 8, 8, 24);
+                    float gap = D / m2, rad = 6f * s.Spread; int b0 = (int)MathF.Floor(s.Dist / gap);
+                    for (int j = 0; j < m2; j++)
+                    {
+                        float z = 1f + j * gap - Mod(s.Dist, gap), tw = (j + b0) * .1f + s.T * s.Spin * .2f; var col = Ramp(((j + b0) % 6) / 5f);
+                        for (int k = 0; k < corners; k++)
+                        {
+                            float a0 = tw + k * MathF.Tau / corners, a1 = tw + (k + 1) * MathF.Tau / corners, r0 = star && (k & 1) == 1 ? rad * .5f : rad, r1 = star && ((k + 1) & 1) == 1 ? rad * .5f : rad;
+                            var p0 = new Vector2(MathF.Cos(a0) * r0, MathF.Sin(a0) * r0); var p1 = new Vector2(MathF.Cos(a1) * r1, MathF.Sin(a1) * r1); var d = p1 - p0;
+                            Add(PvMesh.Cube, new((p0.X + p1.X) / 2f, (p0.Y + p1.Y) / 2f, z), AxisZ(MathF.Atan2(d.Y, d.X)), new(d.Length() / 2f, .18f * s.Size, .18f * s.Size), col);
+                        }
+                    }
+                }
+                break;
+            case 25: // ジグザグの道
+                {
+                    Tilt(.3f, 3f); const float D = 40f; int m2 = 30; float gap = D / m2, off = Mod(s.Dist, gap); int r0 = (int)MathF.Floor(s.Dist / gap);
+                    for (int j = 0; j < m2; j++)
+                    {
+                        int id = j + r0; float z = 1f + j * gap - off, x = MathF.Sin(id * .35f) * 6f * s.Spread;
+                        Add(PvMesh.Cube, new(x, -3f, z), AxisY(MathF.Cos(id * .35f) * .4f), new(2f * s.Size, .1f, gap * .45f), id % 2 == 0 ? s.Pal.A : s.Pal.B);
+                        if (id % 3 == 0) { Add(PvMesh.Cube, new(x - 2.6f, -2f, z), Quaternion.Identity, new(.12f, 1f, .12f), s.Pal.C); Add(PvMesh.Cube, new(x + 2.6f, -2f, z), Quaternion.Identity, new(.12f, 1f, .12f), s.Pal.C); }
+                    }
+                }
+                break;
+            case 26: // れんがの塔
+                {
+                    int m2 = Math.Clamp(s.N, 60, 300); float rad = 4f * s.Spread;
+                    for (int i = 0; i < m2; i++)
+                    {
+                        float a = i * .5f + s.T * s.Spin * .2f, y = -8f + Mod(i * .11f + s.T * .4f * SpinAbs, 16f);
+                        Add(PvMesh.Cube, new(MathF.Cos(a) * rad, y, 18f + MathF.Sin(a) * rad), AxisY(-a), new(.9f * s.Size, .22f, .4f * s.Size), Pick(i));
+                    }
                 }
                 break;
             default: // 浮かぶ島

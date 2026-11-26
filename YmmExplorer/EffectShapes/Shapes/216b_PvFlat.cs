@@ -16,7 +16,7 @@ internal sealed class PvFlat
     readonly float u, t, mv, cell;
     float ex, ey;
 
-    public static bool IsFlat(PvScene x) => x >= PvScene.Gradient && (x <= PvScene.Curtain || (x >= PvScene.Stars && x <= PvScene.MonoRandom2) || x >= PvScene.MonoSymbol);
+    public static bool IsFlat(PvScene x) => x >= PvScene.Gradient && (x <= PvScene.Curtain || (x >= PvScene.Stars && x <= PvScene.MonoRandom2) || (x >= PvScene.MonoSymbol && x <= PvScene.PtCircleEq) || x >= PvScene.MonoRecord);
 
     public static void Paint(ID2D1DeviceContext dc, ID2D1SolidColorBrush br, in PvStage.Setup s) => new PvFlat(dc, br, s).Run();
 

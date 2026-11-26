@@ -75,7 +75,7 @@ internal sealed class Canvas3D(Sculpt m, PvStage.Setup s) : ICanvas
 
 internal sealed class PvPat
 {
-    public static bool IsPat(PvScene x) => x >= PvScene.TlGridCircle;
+    public static bool IsPat(PvScene x) => (x >= PvScene.TlGridCircle && x <= PvScene.PtCircleEq) || x >= PvScene.TlSpinCircle;
 
     readonly ICanvas c;
     readonly PvStage.Setup s;
@@ -166,6 +166,7 @@ internal sealed class PvPat
     // ---------------------------------------------------------------- 入口
     public void Run()
     {
+        if (s.Scene >= PvScene.TlSpinCircle) { RunV127(); return; }
         int i = (int)s.Scene - (int)PvScene.TlGridCircle;
         if (i < 12) { TileGrid(i); return; }
         if (i < 24) { TileFloat(i - 12); return; }
@@ -457,5 +458,287 @@ internal sealed class PvPat
             c.Fill([new(cs * r0 - sn * half, sn * r0 + cs * half), new(cs * (r0 + len) - sn * half, sn * (r0 + len) + cs * half), new(cs * (r0 + len) + sn * half, sn * (r0 + len) - cs * half), new(cs * r0 + sn * half, sn * r0 - cs * half)], Ramp(k / (float)n), .95f, 10f, 16f);
         }
         c.Ring(0, 0, r0 - 20f, 6f, s.Pal.C, .9f, 10f);
+    }
+
+    // ---------------------------------------------------------------- v127 で足した背景
+    void RunV127()
+    {
+        int j = (int)s.Scene - (int)PvScene.TlSpinCircle;
+        if (j < 12) { TileSpin(j); return; }
+        if (j < 24) { TileFall(j - 12); return; }
+        switch (s.Scene)
+        {
+            case PvScene.PtHoney: Honey(); break;
+            case PvScene.PtMosaic: Mosaic(); break;
+            case PvScene.PtArgyle: Argyle(); break;
+            case PvScene.PtDiagDots: DiagDots(); break;
+            case PvScene.PtWaveGrid: WaveGrid(); break;
+            case PvScene.PtSquareZoom: SquareZoom(false); break;
+            case PvScene.PtPinwheel: Pinwheel(); break;
+            case PvScene.PtSunCircles: SunCircles(); break;
+            case PvScene.PtPixels: Pixels(); break;
+            case PvScene.PtWarp: Warp(); break;
+            case PvScene.PtBubbleCols: BubbleCols(); break;
+            case PvScene.PtStreamers: Streamers(); break;
+            case PvScene.PtCheckTunnel: SquareZoom(true); break;
+            case PvScene.PtPolar: Polar(); break;
+            case PvScene.PtWaveDots: WaveDots(); break;
+            case PvScene.PtSoftBlobs: SoftBlobs(); break;
+            case PvScene.PtCrossHatch: CrossHatch(); break;
+            default: SpiralLines(); break;
+        }
+    }
+
+    /// <summary>回る図形: 図形が何重もの輪になって、輪ごとに反対へ回る</summary>
+    void TileSpin(int kind)
+    {
+        for (int l = 1; l <= 5; l++)
+        {
+            float rad = (150f + l * 140f) * s.Spread, rot = t * (l % 2 == 0 ? .25f : -.25f), size = (46f - l * 4f) * s.Size * (1f + s.Flash * .2f); int cnt = 6 + l * 5;
+            for (int k = 0; k < cnt; k++)
+            {
+                float a = rot + k * MathF.Tau / cnt, x = MathF.Cos(a) * rad, y = MathF.Sin(a) * rad;
+                Shape(kind, x, y, size, a + MathF.PI / 2f, Ramp((l - 1) / 4f), .92f * Calm(x, y), l * 15f, 14f);
+            }
+        }
+    }
+
+    /// <summary>降る図形: ひらひら回りながら上から降る</summary>
+    void TileFall(int kind)
+    {
+        int n = Math.Clamp(s.N, 10, 160); float h = ey * 2f + 200f;
+        for (int i = 0; i < n; i++)
+        {
+            float z = 60f - R(i, 6) * 700f; var dep = c.Depth(z);
+            float y = -ey - 100f + Mod(R(i, 1) * h + (mv * .5f + t * 80f) * (.5f + R(i, 2)), h), x = (R(i, 0) - .5f) * ex * 2.2f + MathF.Sin(t * .9f + i) * 40f;
+            float r = (24f + R(i, 3) * 40f) * s.Size * dep.Y, rot = t * (1f + R(i, 4)) + i;
+            Shape(kind, x * dep.X, y * dep.X, r, rot, Pick(i), .9f * Calm(x, y), z, r * .3f);
+        }
+    }
+
+    void Honey()
+    {
+        float rr = MathF.Max(40f, 70f * s.Spread), w = rr * 1.732f, h = rr * 1.5f;
+        int c0 = (int)MathF.Ceiling(ex / w) + 1, r0 = (int)MathF.Ceiling(ey / h) + 1;
+        for (int r = -r0; r <= r0; r++)
+            for (int q = -c0; q <= c0; q++)
+            {
+                float x = q * w + ((r & 1) != 0 ? w / 2f : 0f), y = r * h, d = MathF.Sqrt(x * x + y * y) / 200f, ph = Fr(beats * .5f - d * .15f);
+                if (ph < .3f) c.Fill(Poly(x, y, rr * .9f, 6, MathF.PI / 6f), Ramp(1f - ph / .3f), .9f * Calm(x, y), 40f * (1f - ph / .3f), 12f);
+                else Outline(Poly(x, y, rr * .9f, 6, MathF.PI / 6f), 3f, s.Pal.B, .6f, 0f);
+            }
+    }
+
+    void Mosaic()
+    {
+        float g = MathF.Max(70f, 110f * s.Spread), h = g * .866f;
+        int c0 = (int)MathF.Ceiling(ex / g) + 2, r0 = (int)MathF.Ceiling(ey / h) + 1;
+        for (int r = -r0; r <= r0; r++)
+            for (int q = -c0; q <= c0; q++)
+            {
+                float x = q * g + ((r & 1) != 0 ? g / 2f : 0f), y = r * h; int id = r * 131 + q * 7;
+                c.Fill([new(x, y), new(x + g, y), new(x + g / 2f, y + h)], Pick(id + st * 7), .95f, 0f, 8f);
+                c.Fill([new(x + g, y), new(x + g * 1.5f, y + h), new(x + g / 2f, y + h)], Pick(id + 3 + st * 11), .95f, -20f, 8f);
+            }
+    }
+
+    void Argyle()
+    {
+        float w = MathF.Max(90f, 160f * s.Spread), h = w * 1.4f, oy = Mod(mv * .5f, h);
+        int c0 = (int)MathF.Ceiling(ex / w) + 1, r0 = (int)MathF.Ceiling(ey / h) + 2;
+        for (int r = -r0; r <= r0; r++)
+            for (int q = -c0; q <= c0; q++)
+            {
+                float x = q * w, y = r * h + oy + ((q & 1) != 0 ? h / 2f : 0f);
+                c.Fill([new(x, y - h / 2f), new(x + w / 2f, y), new(x, y + h / 2f), new(x - w / 2f, y)], ((q + r) & 1) == 0 ? s.Pal.A : s.Pal.B, .95f, 0f, 8f);
+            }
+        float dash = 18f, run = Mod(t * 30f, dash * 2f);
+        for (int q = -c0 * 2; q <= c0 * 2; q++)
+        {
+            float x0 = q * w;
+            foreach (float sg in new[] { 1f, -1f })
+                for (float k = -ey - 200f + run; k < ey + 200f; k += dash * 2f)
+                {
+                    float ya = k, yb = k + dash, xa = x0 + sg * ya * w / h, xb = x0 + sg * yb * w / h;
+                    c.Line(xa, ya, xb, yb, 3f, s.Pal.C, .9f, 12f);
+                }
+        }
+    }
+
+    void DiagDots()
+    {
+        float g = MathF.Max(40f, 60f * s.Spread), cs = MathF.Cos(-.5f), sn = MathF.Sin(-.5f), m = MathF.Max(ex, ey) * 1.5f, run = Mod(t * 50f + mv, g);
+        for (float b = -m; b <= m; b += g)
+            for (float a = -m; a <= m; a += g)
+            {
+                float lx = a + run, ly = b, x = lx * cs - ly * sn, y = lx * sn + ly * cs;
+                if (MathF.Abs(x) > ex + g || MathF.Abs(y) > ey + g) continue;
+                float p = .5f + .5f * MathF.Sin(b / 90f + t);
+                c.Dot(x, y, g * (.15f + .25f * p), Ramp(p), .9f * Calm(x, y), p * 30f);
+            }
+    }
+
+    void WaveGrid()
+    {
+        float g = MathF.Max(60f, 110f * s.Spread), stp = 40f;
+        for (float x0 = -ex - g; x0 <= ex + g; x0 += g)
+            for (float y = -ey - 40f; y < ey + 40f; y += stp)
+                c.Line(x0 + MathF.Sin(y / 150f + t) * 22f, y, x0 + MathF.Sin((y + stp) / 150f + t) * 22f, y + stp, 3f, s.Pal.A, .9f, 0f);
+        for (float y0 = -ey - g; y0 <= ey + g; y0 += g)
+            for (float x = -ex - 40f; x < ex + 40f; x += stp)
+                c.Line(x, y0 + MathF.Sin(x / 170f - t * .8f) * 22f, x + stp, y0 + MathF.Sin((x + stp) / 170f - t * .8f) * 22f, 3f, s.Pal.B, .9f, 10f);
+    }
+
+    /// <summary>広がる四角(checker=true で、輪ごとに市松に分けたトンネル)</summary>
+    void SquareZoom(bool checker)
+    {
+        const int n = 12;
+        var order = Enumerable.Range(0, n).Select(j => (j, f: Fr(j / (float)n + t * .08f + mv * .0004f))).OrderByDescending(v => v.f).ToList();
+        foreach (var (j, f) in order)
+        {
+            float half = 1300f * f * f + 20f, inner = half * .82f, z = (1f - f) * 100f; var col = j % 2 == 0 ? s.Pal.A : s.Pal.B;
+            if (!checker) { c.Fill([new(-half, -half), new(half, -half), new(half, half), new(-half, half)], col, .95f, z, 6f); continue; }
+            for (int side = 0; side < 4; side++)
+                for (int k = 0; k < 4; k++)
+                {
+                    float a0 = -half + k * half / 2f, a1 = a0 + half / 2f, b0 = -inner + k * inner / 2f, b1 = b0 + inner / 2f;
+                    List<Vector2> q = side switch
+                    {
+                        0 => [new(a0, -half), new(a1, -half), new(b1, -inner), new(b0, -inner)],
+                        1 => [new(half, a0), new(half, a1), new(inner, b1), new(inner, b0)],
+                        2 => [new(a0, half), new(a1, half), new(b1, inner), new(b0, inner)],
+                        _ => [new(-half, a0), new(-half, a1), new(-inner, b1), new(-inner, b0)],
+                    };
+                    c.Fill(q, ((k + side + j + st) & 1) == 0 ? s.Pal.A : s.Pal.C, .95f, z, 6f);
+                }
+        }
+    }
+
+    void Pinwheel()
+    {
+        for (int arm = 0; arm < 5; arm++)
+            for (int k = 1; k < 44; k++)
+            {
+                float r = k * 22f * s.Spread, a = arm * MathF.Tau / 5f + r * .006f + t * .3f, x = MathF.Cos(a) * r, y = MathF.Sin(a) * r;
+                c.Dot(x, y, (4f + k * .35f) * s.Size, Ramp(k / 44f), .9f * Calm(x, y), k * 2f);
+            }
+    }
+
+    void SunCircles()
+    {
+        for (int k = 0; k < 36; k++)
+        {
+            float a = k * MathF.Tau / 36f + t * .1f, cs = MathF.Cos(a), sn = MathF.Sin(a);
+            c.Line(cs * 200f, sn * 200f, cs * 1500f, sn * 1500f, k % 2 == 0 ? 10f : 3f, Ramp(k / 36f), .8f, -20f);
+        }
+        float fb = Fr(beats);
+        for (int l = 0; l < 6; l++) c.Ring(0, 0, (200f + l * 120f + fb * 40f) * s.Spread, l == st % 6 ? 12f : 4f, s.Pal.C, .9f, l * 10f);
+    }
+
+    void Pixels()
+    {
+        float g = MathF.Max(50f, 80f * s.Spread);
+        int c0 = (int)MathF.Ceiling(ex / g), r0 = (int)MathF.Ceiling(ey / g);
+        for (int r = -r0; r < r0; r++)
+            for (int q = -c0; q < c0; q++)
+            {
+                int id = r * 977 + q * 31; if (R(id + st * 977, 2) < .55f) continue;
+                float x = q * g, y = r * g, z = R(id + st, 3) * 40f;
+                c.Fill([new(x + 2f, y + 2f), new(x + g - 2f, y + 2f), new(x + g - 2f, y + g - 2f), new(x + 2f, y + g - 2f)], Pick(id + st), .9f * Calm(x + g / 2f, y + g / 2f), z, 10f);
+            }
+    }
+
+    void Warp()
+    {
+        int n = Math.Clamp(s.N * 2, 60, 300);
+        for (int i = 0; i < n; i++)
+        {
+            float a = R(i, 0) * MathF.Tau, f = Fr(R(i, 1) + s.T * .5f * sp), d = f * f * 1300f + 30f, len = d * .25f, cs = MathF.Cos(a), sn = MathF.Sin(a);
+            c.Line(cs * d, sn * d, cs * (d + len), sn * (d + len), 1f + d / 300f, Vector3.Lerp(Pick(i), Vector3.One, .4f), MathF.Min(1f, d / 300f), -200f + f * 200f);
+        }
+    }
+
+    void BubbleCols()
+    {
+        float h = ey * 2f + 100f;
+        for (int col = 0; col < 9; col++)
+        {
+            float x0 = (col - 4) * ex / 4.5f;
+            for (int k = 0; k < 10; k++)
+            {
+                int id = col * 31 + k; float y = ey + 50f - Mod(R(id, 0) * h + t * (90f + R(col, 1) * 60f), h), x = x0 + MathF.Sin(t * 2f + id) * 16f, r = (8f + R(id, 2) * 24f) * s.Size;
+                c.Ring(x, y, r, MathF.Max(2f, r * .15f), Pick(col), .85f * Calm(x, y), col % 2 * 20f);
+                c.Dot(x - r * .35f, y - r * .35f, r * .18f, Vector3.One, .8f, col % 2 * 20f + 4f);
+            }
+        }
+    }
+
+    void Streamers()
+    {
+        float h = ey * 2f + 500f;
+        for (int i = 0; i < 26; i++)
+        {
+            float x0 = (R(i, 0) - .5f) * ex * 2f, head = Mod(R(i, 1) * h + t * (90f + R(i, 2) * 60f), h) - ey - 400f;
+            for (int k = 0; k < 16; k++)
+            {
+                float y0 = head + k * 20f, y1 = y0 + 20f, xa = x0 + MathF.Sin(k * .4f + t * 3f + i) * 30f, xb = x0 + MathF.Sin((k + 1) * .4f + t * 3f + i) * 30f;
+                c.Line(xa, y0, xb, y1, 10f * s.Size, Pick(i), .92f, (i % 3) * 15f);
+            }
+        }
+    }
+
+    void Polar()
+    {
+        for (int l = 1; l <= 8; l++) c.Ring(0, 0, (60f + l * 115f) * s.Spread, 2f, s.Pal.A, .8f, 0f);
+        float rot = t * .1f;
+        for (int k = 0; k < 24; k++) { float a = rot + k * MathF.Tau / 24f, cs = MathF.Cos(a), sn = MathF.Sin(a); c.Line(cs * 120f, sn * 120f, cs * 1100f, sn * 1100f, 2f, s.Pal.B, .8f, 4f); }
+        float a0 = rot + (st % 24) * MathF.Tau / 24f, a1 = a0 + MathF.Tau / 24f; var w = new List<Vector2>();
+        for (int j = 0; j <= 6; j++) { float a = a0 + (a1 - a0) * j / 6f; w.Add(new(MathF.Cos(a) * 1100f, MathF.Sin(a) * 1100f)); }
+        for (int j = 6; j >= 0; j--) { float a = a0 + (a1 - a0) * j / 6f; w.Add(new(MathF.Cos(a) * 120f, MathF.Sin(a) * 120f)); }
+        c.Fill(w, s.Pal.C, .45f, 8f, 6f);
+    }
+
+    void WaveDots()
+    {
+        float gx = MathF.Max(36f, 50f * s.Spread), gy = 90f;
+        for (float y0 = -ey; y0 <= ey; y0 += gy)
+            for (float x = -ex; x <= ex; x += gx)
+            {
+                float w = MathF.Sin(x / 180f + t * 2f + y0 * .005f), y = y0 + w * 30f;
+                c.Dot(x, y, (6f + 4f * w) * s.Size, Ramp(.5f + .5f * w), .9f * Calm(x, y), 20f + w * 20f);
+            }
+    }
+
+    void SoftBlobs()
+    {
+        for (int i = 0; i < 14; i++)
+        {
+            float x = (Fr(R(i, 0) + t * .01f * (R(i, 3) - .5f) + mv * .0001f) - .5f) * ex * 2.2f, y = (R(i, 1) - .5f) * ey * 2f + MathF.Sin(t * .4f + i) * 60f, r = (120f + R(i, 2) * 180f) * s.Size;
+            c.Dot(x, y, r, Pick(i), .28f, -i * 20f);
+        }
+    }
+
+    void CrossHatch()
+    {
+        float g = MathF.Max(30f, 50f * s.Spread), m = ex + ey, o1 = Mod(t * 40f + mv, g), o2 = Mod(-t * 40f, g);
+        for (float k = -m; k <= m; k += g)
+        {
+            c.Line(k + o1 - ey, -ey - 20f, k + o1 + ey, ey + 20f, 4f, s.Pal.A, .8f, 0f);
+            c.Line(k + o2 + ey, -ey - 20f, k + o2 - ey, ey + 20f, 4f, s.Pal.B, .8f, 15f);
+        }
+    }
+
+    void SpiralLines()
+    {
+        for (int arm = 0; arm < 6; arm++)
+        {
+            float px = 0f, py = 0f;
+            for (float r = 30f; r < 1300f; r += 24f)
+            {
+                float a = arm * MathF.Tau / 6f + r * .004f + t * .4f, x = MathF.Cos(a) * r, y = MathF.Sin(a) * r;
+                if (r > 30f) c.Line(px, py, x, y, 6f * s.Size, Ramp(arm / 5f), .9f, arm * 8f);
+                px = x; py = y;
+            }
+        }
     }
 }
