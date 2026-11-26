@@ -80,6 +80,7 @@ internal sealed class PvFlat
                 case PvScene.Sparkles: Sparkles(); break;
                 case PvScene.Ribbons: Ribbons(); break;
                 case PvScene.Rays: Rays(); break;
+                case PvScene.MonoGeo: MonoGeo(); break;
             }
         }
         finally { dc.Transform = prev; }
@@ -633,5 +634,90 @@ internal sealed class PvFlat
             Poly(C(Ramp(i / (float)n), al), ox, oy, ox + MathF.Cos(a - w) * l, oy + MathF.Sin(a - w) * l, ox + MathF.Cos(a + w) * l, oy + MathF.Sin(a + w) * l);
         }
         Blob(ox + ex * .1f, oy + ey * .1f, 260f * u, Vector3.One, .5f);
+    }
+
+    // ---------------------------------------------------------------- v122 白黒の図形(紙にインクで描いたような図形の組み合わせ)
+    /// <summary>拍ごとに1つ進む数(回る速さで変わる)</summary>
+    int Step => (int)MathF.Floor(s.T * 2f * MathF.Max(.2f, MathF.Abs(s.Spin)));
+
+    void MonoGeo()
+    {
+        float hw = s.W / 2f, hh = s.H / 2f, lw = MathF.Max(1.2f, 2.4f * u); int st = Step;
+        bool flip = (s.Seed & 1) != 0;
+        float F(float x) => flip ? -x : x;
+        var ink = C(s.Pal.A, .95f);
+        void Ln(float x0, float y0, float x1, float y1, Color4 c, float w) => Line(F(x0), y0, F(x1), y1, c, w);
+
+        // 紙のざらつき(1秒に12回変わる点とかすれ)
+        int tick = (int)MathF.Floor(s.T * 12f);
+        for (int i = 0; i < 700; i++)
+        {
+            int id = i * 7 + tick * 7919;
+            Dot((R(id, 0) - .5f) * ex * 2f, (R(id, 1) - .5f) * ey * 2f, (.5f + R(id, 2) * 1.2f) * u, C(s.Pal.A, .12f + R(id, 3) * .3f));
+        }
+        for (int i = 0; i < 16; i++)
+        {
+            int id = i * 13 + (tick / 3) * 104729; float x = (R(id, 0) - .5f) * ex * 2f, y = (R(id, 1) - .5f) * ey * 2f, a = (R(id, 2) - .5f) * .5f, l = (20f + R(id, 3) * 70f) * u;
+            Line(x, y, x + MathF.Cos(a) * l, y + MathF.Sin(a) * l, C(s.Pal.A, .18f + R(id, 4) * .2f), (.6f + R(id, 5) * 1.6f) * u);
+        }
+
+        // × の並び(ななめの列ごとに + に変わる)
+        for (int r = 0; r < 4; r++)
+            for (int q = 0; q < 6; q++)
+            {
+                float x = -hw + (92f + q * 114f) * u, y = -hh + (98f + r * 116f) * u, z = 15f * u, a = (q + r + st) % 6 == 0 ? 0f : MathF.PI / 4f;
+                float cs = MathF.Cos(a) * z, sn = MathF.Sin(a) * z;
+                Ln(x - cs, y - sn, x + cs, y + sn, ink, lw); Ln(x + sn, y - cs, x - sn, y + cs, ink, lw);
+            }
+
+        // ななめ線入りの四角の列(上は拍ごとに左へずれる、下はその場)
+        void Boxes(float y, float x0, int n, float shift, int seedRow)
+        {
+            float g = 160f * u, b = 112f * u;
+            for (int k = -1; k <= n; k++)
+            {
+                float x = x0 + k * g - shift;
+                if (x < x0 - 1f || x > hw + 40f * u) continue;
+                int id = k + (int)MathF.Floor(shift / g) + seedRow;
+                Ln(x, y, x + b, y, ink, lw); Ln(x + b, y, x + b, y + b, ink, lw); Ln(x + b, y + b, x, y + b, ink, lw); Ln(x, y + b, x, y, ink, lw);
+                if ((id + st) % 7 == 0) Poly(ink, F(x), y, F(x + b), y + b, F(x), y + b);
+                else if ((id + st) % 5 == 0) Ln(x + b, y, x, y + b, ink, lw);
+                else Ln(x, y, x + b, y + b, ink, lw);
+            }
+        }
+        float scroll = Mod(st * 40f * u + mv, 160f * u * 64f);
+        Boxes(-hh + 220f * u, -hw + 792f * u, 9, scroll, 0);
+        Boxes(hh - 262f * u, -hw + 68f * u, 8, 0f, 31);
+
+        // ななめ線の平行四辺形(線が1本ずつ伸びて、そろうとまた消える)
+        {
+            float x0 = -hw + 90f * u, x1 = -hw + 600f * u, top = -hh + 510f * u, bot = -hh + 672f * u, sk = (bot - top) * .55f, gap = 11f * u;
+            int n = (int)((x1 - x0) / gap), ph = st % (n / 4 + 8), vis = Math.Min(n, ph * 4);
+            for (int i = 0; i < vis; i++) { float x = x0 + i * gap; Ln(x, bot, x + sk, top, C(s.Pal.A, .85f), MathF.Max(1f, 1.5f * u)); }
+        }
+
+        // 下の太いななめ線の帯(流れる)
+        {
+            float top = hh - 105f * u, g = 46f * u, o = Mod(mv + s.T * 60f * u * MathF.Max(.2f, MathF.Abs(s.Spin)), g);
+            for (float x = -ex - g * 3f + o; x < ex + g; x += g) Line(x, ey + 4f, x + (ey + 4f - top), top, ink, MathF.Max(1.4f, 3f * u));
+        }
+
+        // 目盛りの輪(拍ごとに少し回る。まばらに欠ける)
+        {
+            float cx = hw - 528f * u, cy = hh - 300f * u, r = 140f * u, rot = st * MathF.PI / 18f;
+            for (int i = 0; i < 36; i++)
+            {
+                if (R(i + st * 3, 7) < .1f) continue;
+                float a = rot + i * MathF.Tau / 36f, c = MathF.Cos(a), sn = MathF.Sin(a);
+                Ln(cx + c * r * .8f, cy + sn * r * .8f, cx + c * r * 1.08f, cy + sn * r * 1.08f, ink, MathF.Max(1f, 1.8f * u));
+                Dot(F(cx + c * r * .94f), cy + sn * r * .94f, 3.4f * u, ink);
+            }
+        }
+
+        // 黒い三角の積み重ね(拍ごとに1つずつ増える)
+        {
+            float x = hw - 340f * u, y0 = hh - 520f * u, w = 90f * u, h = 92f * u; int vis = 1 + st % 5;
+            for (int i = 0; i < Math.Min(4, vis); i++) { float y = y0 + i * h * 1.02f; Poly(ink, F(x), y, F(x), y + h, F(x + w), y + h); }
+        }
     }
 }

@@ -102,6 +102,8 @@ public enum PvScene
     [Display(Name = "キラキラ")] Sparkles,
     [Display(Name = "リボン")] Ribbons,
     [Display(Name = "斜めの光")] Rays,
+    // v122
+    [Display(Name = "白黒の図形")] MonoGeo,
 }
 
 /// <summary>背景の種類が2Dかどうか(プラグインの外からも使う)</summary>
@@ -160,6 +162,7 @@ public enum PvPalette
     [Display(Name = "虹")] Rainbow,
     [Display(Name = "レトロ")] Retro,
     [Display(Name = "夢かわ")] Dream,
+    [Display(Name = "紙とインク")] Paper,
 }
 
 public sealed class PvStage3DPlugin : IShapePlugin
@@ -317,7 +320,8 @@ public sealed class PvStage3DParameter : EffectShapeParameterBase
             stage.Build();
             stage.Paint(dc, brush);
         }
-        PaintDim(dc, c.Width, c.Height, c.F(CenterDim) / 100f * op, c.F(EdgeDim) / 100f * op);
+        // 白黒の図形は白い紙のままにする(暗くすると、紙が灰色にくすむ)
+        if (Scene != PvScene.MonoGeo) PaintDim(dc, c.Width, c.Height, c.F(CenterDim) / 100f * op, c.F(EdgeDim) / 100f * op);
     }
 
     /// <summary>
@@ -422,6 +426,7 @@ internal static class PvPalettes
         PvPalette.Rainbow => P(0x0C0B1F, 0x221440, 0xFF4D6D, 0x3DDC97, 0x4DA3FF),
         PvPalette.Retro => P(0x2E2A3F, 0xE8A87C, 0xE27D60, 0x41B3A3, 0xF2D388),
         PvPalette.Dream => P(0xCDB4FF, 0xFFC8DD, 0xFF8FC7, 0x8FDDFF, 0xFFF3A8),
+        PvPalette.Paper => P(0xF5F4EF, 0xEDEBE4, 0x121212, 0x3A3A3A, 0x121212),
         _ => new(W(b1), W(b2), W(c1), W(c2), W(c3)),
     };
 }
