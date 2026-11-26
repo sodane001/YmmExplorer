@@ -1,4 +1,4 @@
-using System.ComponentModel.DataAnnotations;
+﻿using System.ComponentModel.DataAnnotations;
 using System.Numerics;
 using Vortice;
 using Vortice.Direct2D1;
@@ -300,14 +300,16 @@ public sealed class PvStage3DParameter : EffectShapeParameterBase
 
     /// <summary>
     /// 3Dのとき: 立体を2Dの絵に直さず、本物の3Dの形のまま渡す(3Dプレビューで回しても、ちゃんと奥行きのある立体になる)。
-    /// 2Dの背景(グラデーションなど)の種類は、今まで通り2Dの絵から立体にする
+    /// 2Dの背景(グラデーションなど)の種類も、粒・柱・輪などを奥行きに並べた立体にする(専用3Dモデルを切ると、今まで通り2Dの絵から立体にする)
     /// </summary>
     internal override bool BuildNative3D(in DrawContext c, Native3D n)
     {
-        if (PvFlat.IsFlat(Scene)) return false;
+        bool flat = PvFlat.IsFlat(Scene);
+        if (flat && !UseModel3D) return false;
         var setup = MakeSetup(c, out _, out float op);
         if (op <= 0.002f) return true;
-        new PvStage(setup).BuildNative(n, BackOn);
+        if (flat) PvFlat3D.Build(setup, n, BackOn);
+        else new PvStage(setup).BuildNative(n, BackOn);
         return true;
     }
 
