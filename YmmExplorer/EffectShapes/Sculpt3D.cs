@@ -428,7 +428,7 @@ internal static partial class Models3D
     {
         if (!key2D.EndsWith("Plugin", StringComparison.Ordinal)) return false;
         var t = typeof(Models3D).Assembly.GetType(key2D[..^"Plugin".Length] + "Parameter");
-        return t != null && (quick ??= BuildQuick()).ContainsKey(t);
+        return t != null && ((quick ??= BuildQuick()).ContainsKey(t) || HasScene(t));
     }
 
     static Dictionary<Type, QuickModel> BuildQuick()
@@ -476,6 +476,7 @@ internal static partial class Models3D
         RegisterJ1b(d);
         RegisterJ1c(d);
         RegisterJ1d(d);
+        RegisterJ1e(d);
         return d;
     }
 
@@ -521,6 +522,7 @@ internal static partial class Models3D
     static partial void RegisterJ1b(Dictionary<Type, QuickModel> d);
     static partial void RegisterJ1c(Dictionary<Type, QuickModel> d);
     static partial void RegisterJ1d(Dictionary<Type, QuickModel> d);
+    static partial void RegisterJ1e(Dictionary<Type, QuickModel> d);
 }
 
 /// <summary>文字の形を三角形と輪郭にしたもの(同じ文字・大きさは覚えておく)</summary>

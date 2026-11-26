@@ -87,7 +87,7 @@ public abstract partial class EffectShapeParameterBase : ShapeParameterBase
     protected sealed override IEnumerable<IAnimatable> GetAnimatables() => [Width, Height, .. GetExtraAnimatables(), .. Animatables3D()];
 
     /// <summary>本物の3Dの形をそのまま作れる図形は、ここで作って true を返す(2Dの絵を立体にする代わりに使う)</summary>
-    internal virtual bool BuildNative3D(in DrawContext c, Native3D n) => false;
+    internal virtual bool BuildNative3D(in DrawContext c, Native3D n) => Models3D.BuildScene(this, c, n);
 
     public override IShapeSource CreateShapeSource(IGraphicsDevicesAndContext devices)
     {

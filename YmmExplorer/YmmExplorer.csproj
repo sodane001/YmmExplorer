@@ -116,6 +116,14 @@
     <Compile Include="EffectShapes\Models\Models_J1b.cs" />
     <Compile Include="EffectShapes\Models\Models_J1c.cs" />
     <Compile Include="EffectShapes\Models\Models_J1d.cs" />
+    <Compile Include="EffectShapes\Models\Models_J1e.cs" />
+    <Compile Include="EffectShapes\Models\Models_Scene.cs" />
+    <Compile Include="EffectShapes\Models\Models_K1a.cs" />
+    <Compile Include="EffectShapes\Models\Models_K1b.cs" />
+    <Compile Include="EffectShapes\Models\Models_K1c.cs" />
+    <Compile Include="EffectShapes\Models\Models_K1d.cs" />
+    <Compile Include="EffectShapes\Models\Models_K1e.cs" />
+    <Compile Include="EffectShapes\Models\Models_K1f.cs" />
     <Compile Include="EffectShapes\Shape3DRenderer.cs" />
     <Compile Include="EffectShapes\Ymm43DBridge.cs" />
     <Compile Include="EffectShapes\Shapes\01_Rain.cs" />
