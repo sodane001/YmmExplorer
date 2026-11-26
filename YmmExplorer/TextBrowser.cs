@@ -1,4 +1,4 @@
-using System.Globalization;
+﻿using System.Globalization;
 using System.Text.Json;
 using System.Text.Json.Nodes;
 using System.Windows;
@@ -168,8 +168,11 @@ public static class TextTplRender
         return group;
     }
 
-    /// <summary>テンプレート t で text を描く(w×h、背景はテンプレートの色)</summary>
-    public static BitmapSource? Render(TextTpl t, string text, int w, int h)
+    /// <summary>
+    /// テンプレート t で text を描く(w×h、背景はテンプレートの色)。
+    /// fixedScale を渡すと、テンプレートの 1px をその倍率で描く(YMM4 のプレビューと比べる用)。bg を渡すと背景の色を変える
+    /// </summary>
+    public static BitmapSource? Render(TextTpl t, string text, int w, int h, double fixedScale = 0, Color? bg = null)
     {
         try
         {
@@ -185,18 +188,18 @@ public static class TextTplRender
             var b = geo.Bounds;
             if (b.IsEmpty || b.Width < 1) return null;
 
-            // 装飾・エフェクトの広がり(形の単位)
+            // 装飾・エフェクトの広がり(形の単位)。YMM4 の縁取りは、文字の大きさのおよそ 4.5%(細いものは 2.5%)
             bool border = t.Style.Contains("Border"), sharp = t.Style.StartsWith("Sharp"), light = t.Style.EndsWith("Light");
-            double r0 = border ? S0 * (light ? .04 : .07) : 0;
+            double r0 = border ? S0 * (light ? .025 : .045) : 0;
             double margin = r0, shadowOff = 0;
-            if (t.Style.StartsWith("Shadow")) shadowOff = S0 * .07;
+            if (t.Style.StartsWith("Shadow")) shadowOff = S0 * .05;
             foreach (var fx in t.Fx)
             {
                 if (fx.Kind == 'o') margin += (fx.A + fx.B) * u;
                 else shadowOff = Math.Max(shadowOff, (Math.Max(Math.Abs(fx.A), Math.Abs(fx.B)) + fx.C) * u);
             }
             margin += shadowOff;
-            double scale = Math.Min(w * .9 / (b.Width + margin * 2), h * .8 / (b.Height + margin * 2));
+            double scale = fixedScale > 0 ? fixedScale * t.Size / S0 : Math.Min(w * .9 / (b.Width + margin * 2), h * .8 / (b.Height + margin * 2));
             var to = new TransformGroup();
             to.Children.Add(new TranslateTransform(-(b.Left + b.Right) / 2, -(b.Top + b.Bottom) / 2));
             to.Children.Add(new ScaleTransform(scale, scale));
@@ -206,7 +209,7 @@ public static class TextTplRender
             var layers = new List<(Color Col, double R, Vector Off, double Blur, bool Sharp)> { (C(t.Color), 0, new Vector(), 0, false) };
             if (border) layers.Insert(0, (C(t.StyleColor), r0, new Vector(), 0, sharp));
             if (t.Style.StartsWith("Shadow"))
-                layers.Insert(0, (A(C(t.StyleColor), light ? .45 : .85), 0, new Vector(S0 * .06, S0 * .06), light ? S0 * .02 : 0, false));
+                layers.Insert(0, (A(C(t.StyleColor), light ? .5 : .9), 0, new Vector(S0 * .045, S0 * .045), light ? S0 * .015 : 0, false));
             double rCur = r0;
             foreach (var fx in t.Fx)
             {
@@ -214,42 +217,38 @@ public static class TextTplRender
                 {
                     rCur += fx.A * u;
                     layers.Insert(0, (C(fx.Color), rCur, new Vector(), fx.B * u, fx.Flag));
-                    rCur += fx.B * u * .5;
                 }
                 else layers.Insert(0, (C(fx.Color), rCur, new Vector(fx.A * u, fx.B * u), fx.C * u, false));
             }
 
-            var dv = new DrawingVisual();
-            using (var dc = dv.RenderOpen())
+            // 層ごとに描いて、ぼかす層には本物のぼかし(BlurEffect)をかける
+            var root = new ContainerVisual();
+            var back = new DrawingVisual();
+            using (var dc = back.RenderOpen()) dc.DrawRectangle(new SolidColorBrush(bg ?? C(t.Bg)), null, new Rect(0, 0, w, h));
+            root.Children.Add(back);
+            foreach (var (col, r, off, blur, sh) in layers)
             {
-                dc.DrawRectangle(new SolidColorBrush(C(t.Bg)), null, new Rect(0, 0, w, h));
-                dc.PushTransform(to);
-                foreach (var (col, r, off, blur, sh) in layers)
+                var v = new DrawingVisual();
+                using (var dc = v.RenderOpen())
                 {
+                    dc.PushTransform(to);
                     if (off.X != 0 || off.Y != 0) dc.PushTransform(new TranslateTransform(off.X, off.Y));
-                    if (blur > .5)
-                    {
-                        // ぼかし: 半径を少しずつ広げながら、薄く重ねる
-                        int n = 6;
-                        for (int k = n; k >= 0; k--)
-                        {
-                            double rr = r + blur * k / n;
-                            var c2 = A(col, .32);
-                            var br = new SolidColorBrush(c2);
-                            dc.DrawGeometry(br, rr > 0 ? new Pen(br, rr * 2) { LineJoin = PenLineJoin.Round } : null, geo);
-                        }
-                    }
-                    else
-                    {
-                        var br = new SolidColorBrush(col);
-                        dc.DrawGeometry(br, r > 0 ? new Pen(br, r * 2) { LineJoin = sh ? PenLineJoin.Miter : PenLineJoin.Round, MiterLimit = 3 } : null, geo);
-                    }
+                    var br = new SolidColorBrush(col);
+                    dc.DrawGeometry(br, r > 0 ? new Pen(br, r * 2) { LineJoin = sh ? PenLineJoin.Miter : PenLineJoin.Round, MiterLimit = 3 } : null, geo);
                     if (off.X != 0 || off.Y != 0) dc.Pop();
+                    dc.Pop();
                 }
-                dc.Pop();
+                if (blur * scale > .5)
+                    v.Effect = new System.Windows.Media.Effects.BlurEffect
+                    {
+                        Radius = blur * scale,
+                        KernelType = System.Windows.Media.Effects.KernelType.Gaussian,
+                        RenderingBias = System.Windows.Media.Effects.RenderingBias.Quality,
+                    };
+                root.Children.Add(v);
             }
             var bmp = new RenderTargetBitmap(w, h, 96, 96, PixelFormats.Pbgra32);
-            bmp.Render(dv);
+            bmp.Render(root);
             bmp.Freeze();
             return bmp;
         }
@@ -440,6 +439,9 @@ public sealed class TextBrowserVm : NotifyBase, IDisposable
     }
 
     public void Dispose() { }
+
+    /// <summary>ID からテンプレートを探す</summary>
+    internal TextTplItem? FindItem(string id) => items.FirstOrDefault(i => i.Id == id);
 
     public RelayCommand PlaceCommand { get; }
     public RelayCommand ApplyCommand { get; }
