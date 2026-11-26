@@ -9,7 +9,7 @@ using System.Windows.Threading;
 namespace YmmExplorer;
 
 // =====================================================================================================
-//  テキストタブ: 最初から入っている書式のテンプレート(200件)を、演出図形タブと同じ形で並べる。
+//  テキストタブ: 最初から入っている書式のテンプレート(600件)を、演出図形タブと同じ形で並べる。
 //  新しいテキストとして配置するか、選択中のテキストに適用する。お気に入りに入れたものは「お気に入り」に集まる
 // =====================================================================================================
 
@@ -49,7 +49,7 @@ public sealed class TextTplItem : NotifyBase
     WeakReference<BitmapSource>? cache;
     bool queued;
 
-    /// <summary>画面に出た時に描く(200件あるので、少しずつ描く)</summary>
+    /// <summary>画面に出た時に描く(600件あるので、少しずつ描く)</summary>
     public ImageSource? Thumb
     {
         get
@@ -94,6 +94,7 @@ public static class TextTplRender
     static Dictionary<string, FontFamily>? families;
     static readonly (string Suffix, FontWeight Weight)[] Weights =
     {
+        ("Extra Bold", FontWeights.ExtraBold), ("Ultra Bold", FontWeights.UltraBold), ("Semi Bold", FontWeights.SemiBold), ("Extra Light", FontWeights.ExtraLight),
         ("ExtraBold", FontWeights.ExtraBold), ("Heavy", FontWeights.Heavy), ("Black", FontWeights.Black), ("SemiBold", FontWeights.SemiBold),
         ("DemiBold", FontWeights.DemiBold), ("Bold", FontWeights.Bold), ("Medium", FontWeights.Medium), ("DemiLight", FontWeights.Light),
         ("ExtraLight", FontWeights.ExtraLight), ("Light", FontWeights.Light), ("Thin", FontWeights.Thin), ("Regular", FontWeights.Normal),
@@ -120,6 +121,9 @@ public static class TextTplRender
         if (d.TryGetValue(name, out var f)) return (f, FontWeights.Normal);
         foreach (var (suffix, w) in Weights)
             if (name.EndsWith(" " + suffix, StringComparison.OrdinalIgnoreCase) && d.TryGetValue(name[..^(suffix.Length + 1)], out var bf)) return (bf, w);
+        // 「YDW バナナスリップplus plus」のように、最後に書体の名前が付いたもの(WPF では「YDW バナナスリップplus」)
+        for (int i = name.LastIndexOf(' '); i > 0; i = name.LastIndexOf(' ', i - 1))
+            if (d.TryGetValue(name[..i], out var pf)) return (pf, FontWeights.Normal);
         return (null, FontWeights.Normal);
     }
 
@@ -484,7 +488,10 @@ public sealed class TextBrowserVm : NotifyBase, IDisposable
     void Load()
     {
         items.Clear();
-        foreach (var t in TextTplData.All) items.Add(new TextTplItem(t));
+        // 番号順だと、あとから足した分(t201〜)が分類の最後にまとまらないので、分類が初めて出てきた順にそろえる(分類の中は番号順)
+        var order = new List<string>();
+        foreach (var t in TextTplData.All) if (!order.Contains(t.Category)) order.Add(t.Category);
+        foreach (var t in TextTplData.All.OrderBy(t => order.IndexOf(t.Category))) items.Add(new TextTplItem(t));
         // 前のテキストタブで保存した書式(YMM4 から直接読んだもの)も、読むだけで並べる
         try
         {
