@@ -100,6 +100,27 @@
             </Setter>
         </Style>
 
+        <!-- タグのボタン(丸い札) -->
+        <Style x:Key="EsTagChip" TargetType="Button">
+            <Setter Property="Foreground" Value="{StaticResource EsText}"/>
+            <Setter Property="Background" Value="{StaticResource EsCard}"/>
+            <Setter Property="FontSize" Value="11.5"/>
+            <Setter Property="Cursor" Value="Hand"/>
+            <Setter Property="Margin" Value="0,0,5,5"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Button">
+                        <Border x:Name="B" Background="{TemplateBinding Background}" CornerRadius="10" Padding="9,2,9,3" BorderThickness="1" BorderBrush="#3D424B">
+                            <ContentPresenter/>
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True"><Setter TargetName="B" Property="BorderBrush" Value="{StaticResource EsAccent}"/></Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
         <!-- お気に入りの星(タイルの右上) -->
         <Style x:Key="EsStarButton" TargetType="Button">
             <Setter Property="Cursor" Value="Hand"/>
@@ -119,7 +140,7 @@
 
         <DataTemplate x:Key="EsTile">
             <Border x:Name="Box" Width="168" Margin="4" CornerRadius="7" Background="{StaticResource EsCard}" BorderThickness="2"
-                    BorderBrush="Transparent" Cursor="Hand" ToolTip="{Binding Description}" MouseLeftButtonDown="Tile_MouseLeftButtonDown">
+                    BorderBrush="Transparent" Cursor="Hand" ToolTip="{Binding ToolTipText}" MouseLeftButtonDown="Tile_MouseLeftButtonDown">
                 <StackPanel>
                     <Grid Height="92" Background="#202227">
                         <TextBlock Text="Aa" FontSize="24" Foreground="#4A4F59" HorizontalAlignment="Center" VerticalAlignment="Center"/>
@@ -175,6 +196,7 @@
                 <Grid.RowDefinitions>
                     <RowDefinition Height="Auto"/>
                     <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="Auto"/>
                     <RowDefinition Height="*"/>
                 </Grid.RowDefinitions>
                 <Grid Margin="10,10,10,4">
@@ -182,14 +204,33 @@
                     <Grid>
                         <TextBox Text="{Binding Search, UpdateSourceTrigger=PropertyChanged}" Padding="8,6" Background="{StaticResource EsCard}"
                                  Foreground="{StaticResource EsText}" CaretBrush="{StaticResource EsText}" BorderBrush="#454A53"/>
-                        <TextBlock Text="テンプレートを検索(例: 字幕 / ネオン / 黄 / 明朝 / ゲーム)" Foreground="{StaticResource EsSub}" Margin="11,6,0,0" IsHitTestVisible="False"
+                        <TextBlock Text="名前やタグで検索(例: 字幕 / ネオン / 黄 / 明朝 / かわいい)。スペースで区切ると、すべてを含むもの" Foreground="{StaticResource EsSub}" Margin="11,6,0,0" IsHitTestVisible="False"
                                    Visibility="{Binding HasNoSearch, Converter={StaticResource EsB2V}}"/>
                     </Grid>
                     <TextBlock Grid.Column="1" Text="{Binding CountText}" Foreground="{StaticResource EsSub}" VerticalAlignment="Center" Margin="12,0,2,0"/>
                 </Grid>
-                <TextBlock Grid.Row="1" Text="{Binding EmptyText}" Foreground="{StaticResource EsSub}" FontSize="12" TextWrapping="Wrap" Margin="14,10,14,4"
+                <DockPanel Grid.Row="1" Margin="12,2,10,2">
+                    <TextBlock DockPanel.Dock="Left" Text="タグ" Foreground="{StaticResource EsSub}" FontSize="11" Margin="0,3,8,0" VerticalAlignment="Top"/>
+                    <ItemsControl ItemsSource="{Binding QuickTags}">
+                        <ItemsControl.ItemsPanel>
+                            <ItemsPanelTemplate><WrapPanel/></ItemsPanelTemplate>
+                        </ItemsControl.ItemsPanel>
+                        <ItemsControl.ItemTemplate>
+                            <DataTemplate>
+                                <Button x:Name="Chip" Style="{StaticResource EsTagChip}" Content="{Binding Name}" ToolTip="{Binding ToolTip}" Click="QuickTag_Click"/>
+                                <DataTemplate.Triggers>
+                                    <DataTrigger Binding="{Binding IsActive}" Value="True">
+                                        <Setter TargetName="Chip" Property="Background" Value="{StaticResource EsAccent}"/>
+                                        <Setter TargetName="Chip" Property="Foreground" Value="#10141A"/>
+                                    </DataTrigger>
+                                </DataTemplate.Triggers>
+                            </DataTemplate>
+                        </ItemsControl.ItemTemplate>
+                    </ItemsControl>
+                </DockPanel>
+                <TextBlock Grid.Row="2" Text="{Binding EmptyText}" Foreground="{StaticResource EsSub}" FontSize="12" TextWrapping="Wrap" Margin="14,10,14,4"
                            Visibility="{Binding HasEmptyText, Converter={StaticResource EsB2V}}"/>
-                <ListBox Grid.Row="2" ItemsSource="{Binding Rows}" ItemContainerStyle="{StaticResource EsRowItem}" Foreground="{StaticResource EsText}" ItemTemplate="{StaticResource EsRow}"
+                <ListBox Grid.Row="3" ItemsSource="{Binding Rows}" ItemContainerStyle="{StaticResource EsRowItem}" Foreground="{StaticResource EsText}" ItemTemplate="{StaticResource EsRow}"
                          Background="Transparent" BorderThickness="0" Margin="6,0,2,6"
                          ScrollViewer.HorizontalScrollBarVisibility="Disabled" ScrollViewer.CanContentScroll="True"
                          VirtualizingPanel.IsVirtualizing="True" VirtualizingPanel.VirtualizationMode="Recycling" VirtualizingPanel.ScrollUnit="Pixel"
@@ -220,6 +261,20 @@
                         </TextBlock>
                         <TextBlock Text="{Binding Selected.Description}" TextWrapping="Wrap" Margin="0,0,0,4"/>
                         <TextBlock Text="{Binding Selected.FontText}" Foreground="{StaticResource EsSub}" FontSize="12" TextWrapping="Wrap" Margin="0,0,0,10"/>
+                        <StackPanel Visibility="{Binding Selected.HasTags, Converter={StaticResource EsB2V}}">
+                            <TextBlock Text="タグ(押すと、そのタグで探します)" Foreground="{StaticResource EsSub}" FontSize="11" Margin="0,0,0,4"/>
+                            <ItemsControl ItemsSource="{Binding Selected.Tags}" Margin="0,0,0,8">
+                                <ItemsControl.ItemsPanel>
+                                    <ItemsPanelTemplate><WrapPanel/></ItemsPanelTemplate>
+                                </ItemsControl.ItemsPanel>
+                                <ItemsControl.ItemTemplate>
+                                    <DataTemplate>
+                                        <Button Style="{StaticResource EsTagChip}" Content="{Binding}" ContentStringFormat="#{0}" Click="Tag_Click"
+                                                ToolTip="このタグで探します(Ctrl を押しながらだと、今の検索に足します)"/>
+                                    </DataTemplate>
+                                </ItemsControl.ItemTemplate>
+                            </ItemsControl>
+                        </StackPanel>
                         <TextBlock Text="見本の文字(新しく作成する時の文字にもなります)" Foreground="{StaticResource EsSub}" FontSize="11" Margin="0,0,0,3"/>
                         <Grid Margin="0,0,0,10">
                             <TextBox Text="{Binding PreviewText, UpdateSourceTrigger=PropertyChanged}" Padding="7,5" Background="{StaticResource EsCard}"

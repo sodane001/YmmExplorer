@@ -1,4 +1,4 @@
-using System.Windows;
+﻿using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
 
@@ -31,5 +31,19 @@ public partial class TextBrowserView : UserControl
     {
         if (Vm is { } vm && (sender as FrameworkElement)?.DataContext is TextTplItem it) vm.ToggleFavorite(it);
         e.Handled = true;
+    }
+
+    static bool CtrlDown => (Keyboard.Modifiers & ModifierKeys.Control) != 0;
+
+    /// <summary>検索欄の下の「よく使うタグ」</summary>
+    void QuickTag_Click(object sender, RoutedEventArgs e)
+    {
+        if (Vm is { } vm && (sender as FrameworkElement)?.DataContext is TextTagChip chip) vm.SearchTag(chip.Name, CtrlDown);
+    }
+
+    /// <summary>右の詳しい表示のタグ</summary>
+    void Tag_Click(object sender, RoutedEventArgs e)
+    {
+        if (Vm is { } vm && (sender as FrameworkElement)?.DataContext is string tag) vm.SearchTag(tag, CtrlDown);
     }
 }

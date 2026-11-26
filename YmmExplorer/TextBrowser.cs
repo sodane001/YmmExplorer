@@ -9,16 +9,17 @@ using System.Windows.Threading;
 namespace YmmExplorer;
 
 // =====================================================================================================
-//  テキストタブ: 最初から入っている書式のテンプレート(600件)を、演出図形タブと同じ形で並べる。
-//  新しいテキストとして配置するか、選択中のテキストに適用する。お気に入りに入れたものは「お気に入り」に集まる
+//  テキストタブ: 最初から入っている書式のテンプレート(1500件)を、演出図形タブと同じ形で並べる。
+//  新しいテキストとして配置するか、選択中のテキストに適用する。お気に入りに入れたものは「お気に入り」に集まる。
+//  1件ずつタグ(分類・フォント・装飾・色・雰囲気)があり、名前やタグで探せる
 // =====================================================================================================
 
 /// <summary>見た目のエフェクト1つ。Kind: o=縁取り(A=太さ B=ぼかし Flag=角ばる) s=影(A=横 B=縦 C=ぼかし)。数はテンプレートの文字の大きさでの値</summary>
 public sealed record TextFx(char Kind, double A, double B, double C, uint Color, bool Flag);
 
-/// <summary>テキストのテンプレート1件(色は AARRGGBB)</summary>
+/// <summary>テキストのテンプレート1件(色は AARRGGBB。Tags はスペース区切りのタグ)</summary>
 public sealed record TextTpl(string Id, string Name, string Category, string Desc, string Sample, string Font, double Size,
-    uint Color, string Style, uint StyleColor, bool Bold, bool Italic, double Spacing, uint Bg, TextFx[] Fx);
+    uint Color, string Style, uint StyleColor, bool Bold, bool Italic, double Spacing, uint Bg, TextFx[] Fx, string Tags);
 
 /// <summary>テキストタブに並ぶ1件(標準のテンプレート、または前に保存した書式)</summary>
 public sealed class TextTplItem : NotifyBase
@@ -34,22 +35,42 @@ public sealed class TextTplItem : NotifyBase
     public string FontText => Tpl != null ? "フォント: " + Tpl.Font + (TextTplRender.HasFont(Tpl.Font) ? "" : "(このパソコンにありません)") : "前のテキストタブで保存した書式";
     public bool FontMissing => Tpl != null && !TextTplRender.HasFont(Tpl.Font);
     public string NoText => Tpl != null ? "No. " + Id.TrimStart('t').TrimStart('0') : "保存した書式";
+    /// <summary>タグ(分類・フォント・装飾・色・雰囲気など)</summary>
+    public IReadOnlyList<string> Tags { get; }
+    public bool HasTags => Tags.Count > 0;
+    /// <summary>タイルに重ねる説明(説明文とタグ)</summary>
+    public string ToolTipText => Tags.Count > 0 ? Description + "\nタグ: " + string.Join("、", Tags) : Description;
 
     public TextTplItem(TextTpl t)
     {
         Tpl = t; Id = t.Id; Name = t.Name; Category = t.Category; Description = t.Desc;
+        Tags = string.IsNullOrWhiteSpace(t.Tags) ? Array.Empty<string>() : t.Tags.Split(' ', StringSplitOptions.RemoveEmptyEntries);
     }
 
     public TextTplItem(EffectEntry e, string category)
     {
         Legacy = e; Id = "u:" + e.Id; Name = e.Name; Category = category;
         Description = e.Description ?? (e.StyleKeys is { Count: > 0 } k ? "保存した項目: " + string.Join("、", k) : "前のテキストタブで保存した書式");
+        Tags = new[] { "保存した書式" };
     }
+
+    string? hay;
+    /// <summary>検索の言葉(比べやすい形にしたもの)が、名前・分類・説明・フォント・見本の文字・タグ(と、その言いかえ)のすべてに入っているか</summary>
+    public bool Matches(IReadOnlyList<string> terms)
+    {
+        hay ??= SearchTags.Normalize(string.Join(" ", new[] { Id, Name, Category, Description, Tpl?.Font, Tpl?.Sample, string.Join(" ", Tags), TextTagWords.Synonyms(Tags) }
+            .Where(x => !string.IsNullOrEmpty(x))));
+        foreach (var t in terms) if (!hay.Contains(t, StringComparison.Ordinal)) return false;
+        return true;
+    }
+
+    /// <summary>このタグを持っているか(ひらがな/カタカナなどの違いは無視)</summary>
+    public bool HasTag(string normalizedTag) => Tags.Any(t => SearchTags.Normalize(t) == normalizedTag);
 
     WeakReference<BitmapSource>? cache;
     bool queued;
 
-    /// <summary>画面に出た時に描く(600件あるので、少しずつ描く)</summary>
+    /// <summary>画面に出た時に描く(1500件あるので、少しずつ描く)</summary>
     public ImageSource? Thumb
     {
         get
@@ -439,8 +460,12 @@ public sealed class TextBrowserVm : NotifyBase, IDisposable
         RunCommand = new RelayCommand(_ => _ = RunAsync(), _ => selected != null);
         FavoriteCommand = new RelayCommand(_ => { if (selected != null) ToggleFavorite(selected); }, _ => selected != null);
         Load();
+        QuickTags = TextTagWords.Quick.Select(n => new TextTagChip(n, items.Count(i => i.Tpl != null && i.Tags.Contains(n)))).Where(c => c.Count > 0).ToList();
         Refresh();
     }
+
+    /// <summary>検索欄の下に並べる、よく使うタグ</summary>
+    public IReadOnlyList<TextTagChip> QuickTags { get; } = Array.Empty<TextTagChip>();
 
     public void Dispose() { }
 
@@ -622,17 +647,52 @@ public sealed class TextBrowserVm : NotifyBase, IDisposable
         Build();
     }
 
+    static string[] Terms(string q) => q.Split(new[] { ' ', '　' }, StringSplitOptions.RemoveEmptyEntries).Select(SearchTags.Normalize).Distinct().ToArray();
+    static bool InCategory(TextTplItem i, string cat) => cat == FavName ? i.IsFavorite : cat == AllName ? i.Tpl != null : i.Category == cat;
+
     void Build()
     {
         var cat = selectedCategory?.Name ?? AllName;
-        var q = search.Trim();
-        var hit = items.Where(i => (cat == FavName ? i.IsFavorite : cat == AllName ? i.Tpl != null : i.Category == cat)
-            && (q.Length == 0 || SearchTags.Matches(q, i.Id, i.Name, i.Category, i.Description, i.Tpl?.Font, i.Tpl?.Sample))).ToList();
+        var terms = Terms(search);
+        var hit = items.Where(i => InCategory(i, cat) && (terms.Length == 0 || i.Matches(terms))).ToList();
         Rows = hit.Chunk(columns).Select(c => new TextRow(c)).ToList();
         CountText = $"{hit.Count} 件";
-        EmptyText = hit.Count > 0 ? "" : cat == FavName && q.Length == 0
-            ? "まだお気に入りがありません。テンプレートの ☆ を押すと、ここに集まります。"
-            : "見つかりませんでした。";
+        if (hit.Count > 0) EmptyText = "";
+        else if (cat == FavName && terms.Length == 0) EmptyText = "まだお気に入りがありません。テンプレートの ☆ を押すと、ここに集まります。";
+        else
+        {
+            // 分類をしぼっている時は、「すべて」なら何件あるかを知らせる
+            int other = cat == AllName ? 0 : items.Count(i => i.Tpl != null && i.Matches(terms));
+            EmptyText = other > 0 ? $"この分類には見つかりませんでした。「すべて」には {other} 件あります。" : "見つかりませんでした。";
+        }
+        foreach (var c in QuickTags) c.IsActive = terms.Contains(SearchTags.Normalize(c.Name));
+    }
+
+    /// <summary>
+    /// タグで探す。add=false: 分類を「すべて」にして、そのタグだけで探す(そのタグだけで探している時に押すと解除)。
+    /// add=true(Ctrl を押しながら): 今の分類と検索はそのままで、そのタグを足す(もう入っていれば外す)
+    /// </summary>
+    public void SearchTag(string tag, bool add)
+    {
+        if (string.IsNullOrWhiteSpace(tag)) return;
+        var words = search.Split(new[] { ' ', '　' }, StringSplitOptions.RemoveEmptyEntries).ToList();
+        var key = SearchTags.Normalize(tag);
+        if (add)
+        {
+            var at = words.FindIndex(w => SearchTags.Normalize(w) == key);
+            if (at >= 0) words.RemoveAt(at); else words.Add(tag);
+            Search = string.Join(" ", words);
+            return;
+        }
+        if (words.Count == 1 && SearchTags.Normalize(words[0]) == key) { Search = ""; return; }
+        var all = Categories.FirstOrDefault(c => c.Name == AllName);
+        if (all != null && !ReferenceEquals(selectedCategory, all))
+        {
+            updating = true;
+            SelectedCategory = all;
+            updating = false;
+        }
+        if (search != tag) Search = tag; else Build();
     }
 
     public void ToggleFavorite(TextTplItem it)
