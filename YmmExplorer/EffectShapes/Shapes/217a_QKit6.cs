@@ -21,6 +21,7 @@ public abstract partial class Q6Art : Q4Art
         0 => ["Color1=地の色", "Color2=模様の色", "Speed=流れる速さ"],
         1 or 8 or 9 or 10 or 11 or 12 or 16 or 21 or 22 or 23 or 28 or 29 or 31 or 34 or 37 or 38 or 39 or 40 or 41 or 42 or 43 or 44 or 45 or 46 or 49 or 51 or 53 or 54 or 55 or 56 or 57 or 59 or 60 or 61 => ["Color1=メインの色", "Color2=サブの色", "Speed=動く速さ"],
         64 => ["Color1=地の色(禁止は輪の色)", "Color2=絵の色", "Speed=動く速さ"],
+        _ when kind >= 65 => ["Color1=メインの色", "Color2=サブの色", "Speed=動く速さ"],
         15 => ["Color1=枠の色", "Color2=サブの色", "Speed=動く速さ"],
         _ => ["Text=文字", "Color1=メインの色", "Color2=サブの色", "Speed=動く速さ"],
     };
@@ -54,7 +55,7 @@ public abstract partial class Q6Art : Q4Art
             case 21: Person(p, t, C, D); break;
             case 22: Diagram(p, t, C, D, K, W); break;
             case 23: WeatherMark(p, t, C, D, W); break;
-            default: if (kind >= 64) Picto2D(p, t, C, D, K, W); else if (kind >= 54) Art10(p, t, C, D, K, W, s); else if (kind >= 37) Art9(p, t, C, D, K, W, s); else Art8(p, t, C, D, K, W, s); break;
+            default: if (kind >= 65) Icon2D(p, t, C, D); else if (kind >= 64) Picto2D(p, t, C, D, K, W); else if (kind >= 54) Art10(p, t, C, D, K, W, s); else if (kind >= 37) Art9(p, t, C, D, K, W, s); else Art8(p, t, C, D, K, W, s); break;
         }
     }
 
