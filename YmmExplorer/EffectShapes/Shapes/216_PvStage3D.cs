@@ -111,6 +111,16 @@ public enum PvScene
     [Display(Name = "白黒の図形 斜め")] MonoSlash,
     [Display(Name = "白黒の図形 点")] MonoDots,
     [Display(Name = "白黒の図形 おまかせ")] MonoRandom,
+    // v125
+    [Display(Name = "白黒の図形 四角")] MonoSquare,
+    [Display(Name = "白黒の図形 矢印")] MonoArrow,
+    [Display(Name = "白黒の図形 星")] MonoStar,
+    [Display(Name = "白黒の図形 うず")] MonoSpiral,
+    [Display(Name = "白黒の図形 棒")] MonoBars,
+    [Display(Name = "白黒の図形 網")] MonoNet,
+    [Display(Name = "白黒の図形 枠")] MonoFrame,
+    [Display(Name = "白黒の図形 三角")] MonoTri,
+    [Display(Name = "白黒の図形 おまかせ2")] MonoRandom2,
 }
 
 /// <summary>背景の種類が2Dかどうか(プラグインの外からも使う)</summary>

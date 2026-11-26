@@ -70,7 +70,7 @@ internal sealed class Ink3D(Sculpt m, PvStage.Setup s) : IInk
 internal sealed class PvMono
 {
     /// <summary>白黒の図形の仲間か(紙とインクの配色・暗くしない・光を当てない、の対象)</summary>
-    public static bool IsMono(PvScene x) => x == PvScene.MonoGeo || (x >= PvScene.MonoCircle && x <= PvScene.MonoRandom);
+    public static bool IsMono(PvScene x) => x == PvScene.MonoGeo || (x >= PvScene.MonoCircle && x <= PvScene.MonoRandom2);
 
     readonly IInk k;
     readonly PvStage.Setup s;
@@ -101,6 +101,15 @@ internal sealed class PvMono
             case PvScene.MonoSlash: SlashLayout(); break;
             case PvScene.MonoDots: DotsLayout(); break;
             case PvScene.MonoRandom: RandomLayout(); break;
+            case PvScene.MonoSquare: SquareLayout(); break;
+            case PvScene.MonoArrow: ArrowLayout(); break;
+            case PvScene.MonoStar: StarLayout(); break;
+            case PvScene.MonoSpiral: SpiralLayout(); break;
+            case PvScene.MonoBars: BarsLayout(); break;
+            case PvScene.MonoNet: NetLayout(); break;
+            case PvScene.MonoFrame: FrameLayout(); break;
+            case PvScene.MonoTri: TriLayout(); break;
+            case PvScene.MonoRandom2: RandomLayout2(); break;
             default: Classic(); break;
         }
     }
@@ -460,7 +469,289 @@ internal sealed class PvMono
             case 9: CircleRow(cx - 180f, cy, 5, 22f, 90f); break;
             case 10: HalfMoon(cx, cy, 100f); break;
             case 11: Checker(cx - 170f, cy - 51f, 10, 3, 34f); break;
-            default: Chevrons(cx - 150f, cy, 5, 36f, 64f); break;
+            case 12: Chevrons(cx - 150f, cy, 5, 36f, 64f); break;
+            default: SlotPart2(type, cx, cy); break;
+        }
+    }
+
+    // ---------------------------------------------------------------- v125 で足した部品
+    /// <summary>正多角形(枠か塗り)</summary>
+    void RegPoly(float cx, float cy, float r, int sides, float rot, float w, float z, bool fill)
+    {
+        var xy = new float[sides * 2];
+        for (int j = 0; j < sides; j++) { float a = rot + j * MathF.Tau / sides; xy[j * 2] = cx + MathF.Cos(a) * r; xy[j * 2 + 1] = cy + MathF.Sin(a) * r; }
+        if (fill) { Pf(z, 10f, xy); return; }
+        for (int j = 0; j < sides; j++) { int k2 = (j + 1) % sides; L(xy[j * 2], xy[j * 2 + 1], xy[k2 * 2], xy[k2 * 2 + 1], w, z); }
+    }
+
+    /// <summary>回る四角の入れ子(1つおきに反対向き。太い1本が内へ移る)</summary>
+    void NestSquares(float cx, float cy, float r, int n)
+    {
+        int hi = st % n;
+        for (int i = 0; i < n; i++)
+        {
+            float rr = r * (n - i) / n, a = st * MathF.PI / 12f * (i % 2 == 0 ? 1f : -1f) + i * .2f;
+            RegPoly(cx, cy, rr, 4, a, i == hi ? 7f : LW, 20f + i * 10f, false);
+        }
+    }
+
+    /// <summary>升目(1マスずつ塗りが進む)</summary>
+    void CellGrid(float x0, float y0, int cols, int rows, float c)
+    {
+        for (int q = 0; q <= cols; q++) L(x0 + q * c, y0, x0 + q * c, y0 + rows * c, 1.6f, 20f);
+        for (int r = 0; r <= rows; r++) L(x0, y0 + r * c, x0 + cols * c, y0 + r * c, 1.6f, 20f);
+        int idx = st % (cols * rows), idx2 = (st * 7 + 3) % (cols * rows);
+        Rect(x0 + idx % cols * c + 5f, y0 + idx / cols * c + 5f, c - 10f, c - 10f, 26f, 10f);
+        D(x0 + idx2 % cols * c + c / 2f, y0 + idx2 / cols * c + c / 2f, c * .18f, 26f);
+    }
+
+    /// <summary>回る四角の列(拍ごとに22.5度ずつ回る。■が進む)</summary>
+    void SpinSquares(float x, float y, int n, float sz, float gap)
+    {
+        int hi = st % n;
+        for (int i = 0; i < n; i++) RegPoly(x + i * gap, y, sz, 4, (st + i) * MathF.PI / 8f, LW, 30f, i == hi);
+    }
+
+    /// <summary>大きなかっこ [ ] (拍ごとに少し開く)</summary>
+    void Brackets(float cx, float cy, float w, float h, float lip)
+    {
+        float hw = w / 2f * ((st & 1) == 0 ? 1f : 1.05f), hh = h / 2f;
+        foreach (float sx in new[] { -1f, 1f })
+        {
+            float x = cx + sx * hw;
+            L(x, cy - hh, x, cy + hh, 4f, 30f);
+            L(x, cy - hh, x - sx * lip, cy - hh, 4f, 30f);
+            L(x, cy + hh, x - sx * lip, cy + hh, 4f, 30f);
+        }
+    }
+
+    /// <summary>太い矢印(拍ごとに少しずつ前へ出て、4拍で戻る)。dir=1 で右向き、-1 で左向き</summary>
+    void BigArrow(float x, float y, float len, float th, float dir)
+    {
+        float o = (st % 4) * 20f * dir, hl = th * 1.6f;
+        float P(float d) => x + o + d * dir;
+        Pf(40f, 30f, P(0), y - th / 2f, P(len - hl), y - th / 2f, P(len - hl), y - th * 1.3f, P(len), y, P(len - hl), y + th * 1.3f, P(len - hl), y + th / 2f, P(0), y + th / 2f);
+    }
+
+    /// <summary>進み具合のバー(拍ごとに1目盛り伸びる)</summary>
+    void Progress(float x, float y, float w, float h, int seg)
+    {
+        Frame(x, y, w, h, LW, 25f);
+        int n = st % (seg + 1); float cw = (w - 8f) / seg;
+        for (int i = 0; i < n; i++) Rect(x + 4f + i * cw, y + 4f, cw - 4f, h - 8f, 25f, 8f);
+    }
+
+    /// <summary>星(5つの角)</summary>
+    void Star(float cx, float cy, float r, float rot, bool fill)
+    {
+        var xy = new float[20];
+        for (int j = 0; j < 10; j++) { float a = rot - MathF.PI / 2f + j * MathF.PI / 5f, rr = j % 2 == 0 ? r : r * .42f; xy[j * 2] = cx + MathF.Cos(a) * rr; xy[j * 2 + 1] = cy + MathF.Sin(a) * rr; }
+        if (fill) { Pf(40f, 14f, xy); return; }
+        for (int j = 0; j < 10; j++) { int k2 = (j + 1) % 10; L(xy[j * 2], xy[j * 2 + 1], xy[k2 * 2], xy[k2 * 2 + 1], LW, 40f); }
+    }
+
+    /// <summary>太陽のような放射の輪(長い線が拍ごとに回る)</summary>
+    void SunRays(float cx, float cy, float r, int n)
+    {
+        O(cx, cy, r * .7f, LW, 30f);
+        for (int i = 0; i < n; i++)
+        {
+            float a = i * MathF.Tau / n, c = MathF.Cos(a), sn = MathF.Sin(a), len = (i + st) % 3 == 0 ? r * .5f : r * .22f;
+            L(cx + c * r, cy + sn * r, cx + c * (r + len), cy + sn * (r + len), 3f, 30f);
+        }
+    }
+
+    /// <summary>◇の並び(◆が進む)</summary>
+    void DiamondRow(float x, float y, int n, float r, float gap)
+    {
+        int hi = st % n;
+        for (int i = 0; i < n; i++) RegPoly(x + i * gap, y, r, 4, 0f, LW, 30f, i == hi);
+    }
+
+    /// <summary>うずまき(拍ごとに回る)</summary>
+    void Spiral(float cx, float cy, float r, float turns)
+    {
+        float rot = st * MathF.PI / 8f; int steps = (int)(turns * 40f);
+        float px = cx, py = cy;
+        for (int j = 1; j <= steps; j++)
+        {
+            float f = j / (float)steps, a = rot + f * turns * MathF.Tau, x = cx + MathF.Cos(a) * r * f, y = cy + MathF.Sin(a) * r * f;
+            L(px, py, x, y, 3f, 30f); px = x; py = y;
+        }
+        D(px, py, 7f, 34f);
+    }
+
+    /// <summary>縦の棒グラフ(拍ごとに高さが変わる)。base0 は棒の下の位置</summary>
+    void EqBars(float x, float base0, int n, float w, float gap, float hMax)
+    {
+        for (int i = 0; i < n; i++)
+        {
+            float h = hMax * (.15f + .85f * R(i + st * 17, 30));
+            Rect(x + i * (w + gap), base0 - h, w, h, 30f, 20f);
+        }
+        L(x - 10f, base0 + 6f, x + n * (w + gap), base0 + 6f, LW, 30f);
+    }
+
+    /// <summary>つながった点(網)。塗った点が拍ごとに移る</summary>
+    void Network(float x0, float y0, float w, float h, int n, int key)
+    {
+        var p = new Vector2[n];
+        for (int i = 0; i < n; i++) p[i] = new(x0 + R(i + key, 40) * w, y0 + R(i + key, 41) * h);
+        for (int i = 0; i < n; i++) { L(p[i].X, p[i].Y, p[(i + 1) % n].X, p[(i + 1) % n].Y, 1.4f, 20f); if (i % 2 == 0) L(p[i].X, p[i].Y, p[(i + 3) % n].X, p[(i + 3) % n].Y, 1.4f, 20f); }
+        for (int i = 0; i < n; i++) { if ((i + st) % 4 == 0) D(p[i].X, p[i].Y, 9f, 30f); else O(p[i].X, p[i].Y, 8f, LW, 30f); }
+    }
+
+    /// <summary>画面のふちの二重の枠</summary>
+    void DoubleFrame(float inset)
+    {
+        Frame(-HW + inset, -HH + inset, (HW - inset) * 2f, (HH - inset) * 2f, 3f, 10f);
+        Frame(-HW + inset + 14f, -HH + inset + 14f, (HW - inset - 14f) * 2f, (HH - inset - 14f) * 2f, 1.2f, 10f);
+    }
+
+    /// <summary>大きな太い×(拍ごとに少し傾く)</summary>
+    void BigX(float cx, float cy, float r)
+    {
+        float a = MathF.PI / 4f + ((st & 1) == 0 ? 0f : MathF.PI / 14f), c = MathF.Cos(a) * r, sn = MathF.Sin(a) * r;
+        L(cx - c, cy - sn, cx + c, cy + sn, 14f, 40f); L(cx + sn, cy - c, cx - sn, cy + c, 14f, 40f);
+    }
+
+    /// <summary>▲▽の並び(塗りが進む)</summary>
+    void TriRow(float x, float y, int n, float sz)
+    {
+        for (int i = 0; i < n; i++)
+        {
+            bool up = (i & 1) == 0, fill = (i + st) % 5 == 0; float cx = x + i * sz * .55f, t0 = up ? y - sz / 2f : y + sz / 2f, b0 = up ? y + sz / 2f : y - sz / 2f;
+            if (fill) Pf(30f, 10f, cx, t0, cx + sz / 2f, b0, cx - sz / 2f, b0);
+            else { L(cx, t0, cx + sz / 2f, b0, LW, 30f); L(cx + sz / 2f, b0, cx - sz / 2f, b0, LW, 30f); L(cx - sz / 2f, b0, cx, t0, LW, 30f); }
+        }
+    }
+
+    /// <summary>点の濃淡(大きい点から小さい点へ。拍ごとに流れる)</summary>
+    void DotFade(float x0, float y0, int cols, int rows, float g)
+    {
+        for (int r = 0; r < rows; r++)
+            for (int q = 0; q < cols; q++)
+            {
+                float f = ((q + st) % cols) / (float)cols;
+                D(x0 + q * g, y0 + r * g, g * .42f * (1f - f) + .8f, 20f);
+            }
+    }
+
+    // ---------------------------------------------------------------- v125 で足した配置
+    void SquareLayout()
+    {
+        PlusGrid(80f, 6f);
+        Corners(28f, 60f);
+        CellGrid(-880f, -460f, 8, 3, 52f);
+        Checker(280f, 440f, 18, 1, 34f);
+        NestSquares(620f, -200f, 180f, 5);
+        SpinSquares(-860f, 330f, 8, 30f, 90f);
+        Brackets(620f, 330f, 380f, 140f, 30f);
+    }
+
+    void ArrowLayout()
+    {
+        BigArrow(-900f, -390f, 520f, 40f, 1f);
+        Chevrons(300f, -390f, 7, 30f, 56f);
+        Dashes(-940f, -260f, 940f, -260f, 30f, 16f);
+        Dashes(-940f, 250f, 940f, 250f, 30f, 16f);
+        Progress(-880f, 310f, 520f, 50f, 10);
+        BigArrow(900f, 420f, 520f, 40f, -1f);
+    }
+
+    void StarLayout()
+    {
+        Star(-640f, -250f, 130f, st * MathF.PI / 10f, false);
+        SunRays(660f, -250f, 90f, 24);
+        Star(700f, 270f, 90f, -st * MathF.PI / 10f, true);
+        DiamondRow(-880f, 330f, 9, 20f, 70f);
+        Band(470f, ey + 4f);
+        for (int i = 0; i < 10; i++)
+        {
+            float x = (R(i, 50) - .5f) * 1800f, y = (R(i, 51) - .5f) * 980f;
+            if (MathF.Abs(x) < 420f && MathF.Abs(y) < 200f) continue;
+            Star(x, y, 14f + R(i, 52) * 10f, i + st * .3f, (i + st) % 3 == 0);
+        }
+    }
+
+    void SpiralLayout()
+    {
+        Ruler(-480f, -940f, 940f, 1f);
+        Spiral(-600f, 140f, 250f, 4f);
+        Concentric(640f, -170f, 140f, 5);
+        TickRing(640f, -170f, 200f);
+        DotGrid(380f, 300f, 10, 4, 44f);
+    }
+
+    void BarsLayout()
+    {
+        EqBars(-900f, -300f, 14, 22f, 12f, 170f);
+        Barcode(420f, -460f, 440f, 110f);
+        Progress(360f, 300f, 560f, 46f, 12);
+        EqBars(-900f, 420f, 20, 14f, 10f, 120f);
+        Ruler(480f, -940f, 940f, -1f);
+    }
+
+    void NetLayout()
+    {
+        Corners(28f, 60f);
+        Network(-900f, -470f, 700f, 300f, 14, 0);
+        Crosshair(620f, -300f, 90f);
+        Network(240f, 150f, 660f, 300f, 12, 300);
+        DotGrid(-880f, 300f, 9, 4, 44f);
+    }
+
+    void FrameLayout()
+    {
+        DoubleFrame(30f);
+        BigX(-640f, -230f, 100f);
+        Brackets(560f, -250f, 420f, 160f, 36f);
+        HalfMoon(-660f, 280f, 90f);
+        XGrid(380f, 220f, 5, 2, 100f, 100f, 14f);
+    }
+
+    void TriLayout()
+    {
+        TriRow(-900f, -420f, 14, 70f);
+        BigTri(640f, -220f, 160f, 0f);
+        Tris(-860f, 140f, 3, 90f, 92f);
+        DotFade(300f, 280f, 14, 4, 40f);
+        TriRow(-500f, 440f, 18, 50f);
+    }
+
+    /// <summary>おまかせ2: 新しい部品もまぜて、種ごとに6つの場所へ部品を置く</summary>
+    void RandomLayout2()
+    {
+        (float x, float y, bool wide)[] slots = [(-640f, -330f, false), (640f, -330f, false), (-640f, 300f, false), (640f, 300f, false), (0f, -420f, true), (0f, 400f, true)];
+        int[] any = Enumerable.Range(0, 26).ToArray(), wide = [5, 9, 11, 12, 15, 18, 23, 24];
+        var used = new HashSet<int>();
+        for (int i = 0; i < slots.Length; i++)
+        {
+            var pool = slots[i].wide ? wide : any; int type = pool[0];
+            for (int tries = 0; tries < 60; tries++) { int t = pool[(int)(R(i * 7 + tries, 190) * pool.Length) % pool.Length]; if (used.Add(t)) { type = t; break; } }
+            SlotPart(type, slots[i].x, slots[i].y);
+        }
+        float b = R(1, 191);
+        if (b < .34f) Band(470f, ey + 4f); else if (b < .67f) Ruler(490f, -940f, 940f, -1f); else DoubleFrame(24f);
+    }
+
+    void SlotPart2(int type, float cx, float cy)
+    {
+        switch (type)
+        {
+            case 13: NestSquares(cx, cy, 110f, 4); break;
+            case 14: CellGrid(cx - 182f, cy - 78f, 7, 3, 52f); break;
+            case 15: SpinSquares(cx - 160f, cy, 5, 26f, 80f); break;
+            case 16: Star(cx, cy, 110f, st * MathF.PI / 10f, false); break;
+            case 17: SunRays(cx, cy, 70f, 24); break;
+            case 18: DiamondRow(cx - 160f, cy, 5, 20f, 80f); break;
+            case 19: Spiral(cx, cy, 120f, 3f); break;
+            case 20: EqBars(cx - 180f, cy + 90f, 10, 24f, 12f, 180f); break;
+            case 21: Network(cx - 190f, cy - 100f, 380f, 200f, 8, (int)(cx + cy)); break;
+            case 22: BigX(cx, cy, 90f); break;
+            case 23: TriRow(cx - 180f, cy, 8, 60f); break;
+            case 24: Progress(cx - 190f, cy - 25f, 380f, 50f, 8); break;
+            default: DotFade(cx - 180f, cy - 60f, 10, 4, 40f); break;
         }
     }
 }
