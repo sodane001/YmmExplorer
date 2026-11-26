@@ -309,6 +309,57 @@ public static class ShapeThumbRenderer
         finally { if (sessions == 0) ReleaseDevices(); }
     }
 
+    /// <summary>
+    /// エフェクトタブの動くプレビュー用: サンプル画像に映像エフェクトをかけた絵を、len フレーム(fps)の長さで count 枚描く。
+    /// 1枚できるごとに onFrame に渡し(false で止める)、画面が固まらないように1枚ずつ間をあける
+    /// </summary>
+    public static async Task RenderVideoEffectFramesAsync(Type type, BitmapSource sample, int count, int len, int fps, Func<BitmapSource, bool> onFrame, CancellationToken ct)
+    {
+        LastError = "";
+        using var session = BeginSession();
+        try
+        {
+            if (Activator.CreateInstance(type) is not YmmExplorer.Fx.FxVideoEffectBase fx) return;
+            var dc = Devices().DeviceContext;
+            BitmapSource src = sample.Format == PixelFormats.Pbgra32 ? sample : new FormatConvertedBitmap(sample, PixelFormats.Pbgra32, null, 0);
+            int sw = src.PixelWidth, sh = src.PixelHeight, stride = sw * 4;
+            var px = new byte[stride * sh];
+            src.CopyPixels(px, stride, 0);
+            var pf = new Vortice.DCommon.PixelFormat(Vortice.DXGI.Format.B8G8R8A8_UNorm, Vortice.DCommon.AlphaMode.Premultiplied);
+            var pin = GCHandle.Alloc(px, GCHandleType.Pinned);
+            ID2D1Bitmap1 bmp;
+            try { bmp = dc.CreateBitmap(new Vortice.Mathematics.SizeI(sw, sh), IntPtr.Zero, 0, new BitmapProperties1(pf, 96, 96, BitmapOptions.None)); bmp.CopyFromMemory(pin.AddrOfPinnedObject(), stride); }
+            finally { pin.Free(); }
+            using (bmp)
+            {
+                using var kit = new YmmExplorer.Fx.FxKit(dc);
+                float scale = Math.Min(FW / (float)sw, FH / (float)sh);
+                var place = Matrix3x2.CreateScale(scale) * Matrix3x2.CreateTranslation((FW - sw * scale) / 2f, (FH - sh * scale) / 2f);
+                var b = dc.GetImageLocalBounds(bmp);
+                kit.NoiseArea = b;
+                for (int k = 0; k < count && !ct.IsCancellationRequested; k++)
+                {
+                    BitmapSource? shot = null;
+                    try
+                    {
+                        var f = new YmmExplorer.Fx.FxFrame { Frame = (long)k * len / count, Length = len, Fps = fps, B = b };
+                        var img = fx.Build(kit, bmp, f);
+                        shot = Capture(dc, FW, FH, () => { dc.Transform = place; dc.DrawImage(img); });
+                    }
+                    catch (Exception ex) { LastError = ex.GetBaseException().Message; }
+                    finally { try { kit.EndFrame(); } catch { } }
+                    if (shot != null) { if (!shot.IsFrozen && shot.CanFreeze) shot.Freeze(); if (!onFrame(shot)) break; }
+                    await System.Windows.Threading.Dispatcher.Yield(System.Windows.Threading.DispatcherPriority.Background);
+                }
+                try { kit.EndFrame(); kit.EndFrame(); } catch { }
+            }
+        }
+        catch (Exception ex) { LastError = ex.GetBaseException().Message; }
+    }
+
+    /// <summary>2つの絵の違い(0 で同じ)。動くエフェクトかどうかを見分けるのに使う</summary>
+    public static double FrameDifference(BitmapSource a, BitmapSource b) => Difference(a, b);
+
     /// <summary>2つの絵の違い(間引いて比べた、明るさの差の平均)</summary>
     static double Difference(BitmapSource a, BitmapSource b)
     {

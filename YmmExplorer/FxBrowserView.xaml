@@ -226,7 +226,13 @@
                         <StackPanel Visibility="{Binding HasSelected, Converter={StaticResource EsB2V}}">
                             <Border CornerRadius="8" Background="#202227" ClipToBounds="True" Margin="0,0,0,10"
                                     Visibility="{Binding IsVideo, Converter={StaticResource EsB2V}}">
-                                <Image Source="{Binding Selected.Thumb}" Height="130" Stretch="Uniform" RenderOptions.BitmapScalingMode="HighQuality"/>
+                                <Grid>
+                                    <Image Source="{Binding PreviewImage}" Height="130" Stretch="Uniform" RenderOptions.BitmapScalingMode="HighQuality"/>
+                                    <Border Background="#B0000000" CornerRadius="4" Padding="6,1" Margin="6" HorizontalAlignment="Left" VerticalAlignment="Bottom"
+                                            Visibility="{Binding PreviewMoving, Converter={StaticResource EsB2V}}">
+                                        <TextBlock Text="▶ 動きあり" Foreground="White" FontSize="11"/>
+                                    </Border>
+                                </Grid>
                             </Border>
                             <TextBlock Text="{Binding Selected.Name}" FontWeight="SemiBold" FontSize="14" TextWrapping="Wrap" Margin="0,0,0,3"/>
                             <TextBlock Foreground="{StaticResource EsSub}" FontSize="12" Margin="0,0,0,8">

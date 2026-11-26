@@ -1,4 +1,4 @@
-using System.IO;
+﻿using System.IO;
 using System.Reflection;
 using System.Windows;
 using System.Windows.Media;
@@ -355,6 +355,7 @@ public sealed class FxBrowserVm : NotifyBase, IDisposable
     {
         FxCatalog.ItemsChanged -= OnItemsChanged;
         FxCatalog.StatusChanged -= OnStatusChanged;
+        StopPreview();
     }
 
     void OnItemsChanged() => Application.Current?.Dispatcher.BeginInvoke(new Action(Refresh));
@@ -437,7 +438,81 @@ public sealed class FxBrowserVm : NotifyBase, IDisposable
             Raise(nameof(HasSelected));
             Raise(nameof(HasNoSelected));
             System.Windows.Input.CommandManager.InvalidateRequerySuggested();
+            StartPreview();
         }
+    }
+
+    // ---------------------------------------------------------------- 動くプレビュー
+    // 選んだ映像エフェクトを、サンプル画像で3秒分(60コマ)描く。時間で変わるエフェクトは繰り返し再生し、変わらないものはサムネイルのまま
+    const int PreviewCount = 60, PreviewLen = 180, PreviewFps = 60;
+    ImageSource? previewImage;
+    /// <summary>右側に出す絵(動くエフェクトは再生中のコマ)</summary>
+    public ImageSource? PreviewImage { get => previewImage; private set => Set(ref previewImage, value); }
+    bool previewMoving;
+    /// <summary>プレビューが動いている(「動きあり」の印を出す)</summary>
+    public bool PreviewMoving { get => previewMoving; private set => Set(ref previewMoving, value); }
+    System.Threading.CancellationTokenSource? previewCts;
+    DispatcherTimer? previewTimer;
+    List<BitmapSource>? previewFrames;
+    int previewIndex;
+    BitmapSource? previewSample;
+
+    async void StartPreview()
+    {
+        previewCts?.Cancel();
+        previewTimer?.Stop();
+        previewFrames = null;
+        PreviewMoving = false;
+        var it = selected;
+        PreviewImage = it?.Thumb;
+        if (it == null || !it.IsVideo) return;
+        if (it.Thumb == null) { it.PropertyChanged += ThumbArrived; }
+        var cts = previewCts = new System.Threading.CancellationTokenSource();
+        var list = new List<BitmapSource>();
+        try
+        {
+            await Task.Delay(120, cts.Token);     // 続けてクリックした時は、最後に選んだものだけ描く
+            previewSample ??= FxCatalog.LoadSample();
+            await ShapeThumbRenderer.RenderVideoEffectFramesAsync(it.Type, previewSample, PreviewCount, PreviewLen, PreviewFps, img => { list.Add(img); return true; }, cts.Token);
+        }
+        catch (OperationCanceledException) { return; }
+        catch { return; }
+        if (cts.IsCancellationRequested || !ReferenceEquals(it, selected) || list.Count < 2) return;
+        // 時間で変わるか: 最初のコマと、いくつかのコマを比べる
+        bool moving = false;
+        for (int k = 1; k < list.Count && !moving; k += 3)
+            if (ShapeThumbRenderer.FrameDifference(list[0], list[k]) > 1.5) moving = true;
+        if (!moving) return;
+        previewFrames = list;
+        previewIndex = 0;
+        PreviewMoving = true;
+        previewTimer ??= new DispatcherTimer(DispatcherPriority.Background) { Interval = TimeSpan.FromMilliseconds(1000.0 * PreviewLen / PreviewFps / PreviewCount) };
+        previewTimer.Tick -= PreviewTick;
+        previewTimer.Tick += PreviewTick;
+        previewTimer.Start();
+    }
+
+    void ThumbArrived(object? sender, System.ComponentModel.PropertyChangedEventArgs e)
+    {
+        if (sender is not FxInfoItem it || e.PropertyName != nameof(FxInfoItem.Thumb)) return;
+        if (it.Thumb == null) return;
+        it.PropertyChanged -= ThumbArrived;
+        if (ReferenceEquals(it, selected) && previewFrames == null) PreviewImage = it.Thumb;
+    }
+
+    void PreviewTick(object? sender, EventArgs e)
+    {
+        var f = previewFrames;
+        if (f == null || f.Count == 0) { previewTimer?.Stop(); return; }
+        previewIndex = (previewIndex + 1) % f.Count;
+        PreviewImage = f[previewIndex];
+    }
+
+    void StopPreview()
+    {
+        previewCts?.Cancel();
+        previewTimer?.Stop();
+        previewFrames = null;
     }
     public bool HasSelected => selected != null;
     public bool HasNoSelected => selected == null;
@@ -527,5 +602,7 @@ public sealed class FxBrowserVm : NotifyBase, IDisposable
         Raise(nameof(SampleText));
         Message = path?.Length > 0 ? "サンプル画像を変えました。映像エフェクトのサムネイルを作り直しています…" : "同梱のサンプル画像に戻しました。サムネイルを作り直しています…";
         FxCatalog.SetSample(settings.FxSampleImage);
+        previewSample = null;
+        StartPreview();
     }
 }
