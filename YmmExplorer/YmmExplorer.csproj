@@ -363,6 +363,9 @@
     <Compile Include="EffectShapes\Shapes\222a_QKit10.cs" />
     <Compile Include="EffectShapes\Shapes\222_QFamilies5.cs" />
     <Compile Include="EffectShapes\Models\Models_L1c.cs" />
+    <Compile Include="EffectShapes\Shapes\223a_QKit11.cs" />
+    <Compile Include="EffectShapes\Shapes\223_QFamilies6.cs" />
+    <Compile Include="EffectShapes\Models\Models_L1d.cs" />
     <Compile Include="EffectShapes\Shapes\217_QFamilies.cs" />
     <Compile Include="EffectShapes\Shapes\219_Solid3D.cs" />
   </ItemGroup>

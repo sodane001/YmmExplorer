@@ -1,4 +1,4 @@
-using System.Numerics;
+﻿using System.Numerics;
 using Vortice.Mathematics;
 
 namespace YMM4EffectShapes;
@@ -186,9 +186,9 @@ public abstract partial class Q6Art
     /// <summary>キーボードのキー(a=1 で横長)。ときどき押し込まれる</summary>
     void KeyCap(ArtPen p, float t, Color4 C, Color4 D, Color4 K, string s)
     {
-        float w = a == 1 ? 600 : 320, press = ArtPen.Fr(t * .7f) < .12f ? 16f : 0f;
-        p.R(0, 24, w, 300, 44, D);
-        p.R(0, -6 + press, w - 44, 246, 36, C);
+        float w = a == 1 ? 600 : 320, h = a == 2 ? 600 : 300, press = ArtPen.Fr(t * .7f) < .12f ? 16f : 0f;
+        p.R(0, 24, w, h, 44, D);
+        p.R(0, -6 + press, w - 44, h - 54, 36, C);
         Fit(p, s, 0, -6 + press, K, w - 90, 120);
     }
 

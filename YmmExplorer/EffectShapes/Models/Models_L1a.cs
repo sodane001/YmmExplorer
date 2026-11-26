@@ -1,4 +1,4 @@
-using System.Numerics;
+﻿using System.Numerics;
 
 namespace YMM4EffectShapes;
 
@@ -120,10 +120,10 @@ internal static partial class Models3D
 
     static void Key3D(Sculpt m, float t, Vector4 C, Vector4 D, int a, string s)
     {
-        float w = a == 1 ? 600 : 320, press = Fr1(t * .7f) < .12f ? 24f : 0f;
+        float w = a == 1 ? 600 : 320, h = a == 2 ? 600 : 300, press = Fr1(t * .7f) < .12f ? 24f : 0f;
         var K = m.C(0x20242B);
-        m.Box(0, 20, 0, w, 300, 80, D, .25f);
-        m.Box(0, -6, 70 - press, w - 44, 246, 60, C, .3f);
+        m.Box(0, 20, 0, w, h, 80, D, .25f);
+        m.Box(0, -6, 70 - press, w - 44, h - 54, 60, C, .3f);
         m.Text(s, FitSize(s, w - 90, 120), 0, -6, 102 - press, 8, K, w - 90);
     }
 
