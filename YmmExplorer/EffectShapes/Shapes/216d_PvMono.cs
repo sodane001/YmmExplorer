@@ -1,4 +1,4 @@
-using System.Numerics;
+﻿using System.Numerics;
 using Vortice.Direct2D1;
 using Vortice.Mathematics;
 
@@ -85,7 +85,8 @@ internal sealed class PvMono
         k = ink; this.s = s; this.ex = ex; this.ey = ey;
         mv = s.Dist * 38f;
         tm = s.T * MathF.Max(.2f, MathF.Abs(s.Spin));
-        st = (int)MathF.Floor(tm * 2f);          // 拍ごとに1つ進む数
+        // カクッと動く回数: BPMに合わせるときは拍ぴったり(動くタイミングの設定で、半拍〜1小節ごと)
+        st = s.Sync ? (int)MathF.Floor(s.Beats * s.PerBeat + 1e-4f) : (int)MathF.Floor(tm * 2f * s.PerBeat);
         flip = (s.Seed & 1) != 0;                // 種が奇数なら左右反対
     }
 

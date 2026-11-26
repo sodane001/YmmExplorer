@@ -119,6 +119,15 @@ public static class PvFlatInfo
     public static bool IsFlat(PvScene x) => PvFlat.IsFlat(x);
 }
 
+/// <summary>拍に合わせてカクッと動く部品が、何拍ごとに動くか</summary>
+public enum PvBeatStep
+{
+    [Display(Name = "半拍ごと")] Half,
+    [Display(Name = "1拍ごと")] One,
+    [Display(Name = "2拍ごと")] Two,
+    [Display(Name = "1小節ごと(4拍)")] Bar,
+}
+
 public enum PvSolid
 {
     [Display(Name = "混ぜる")] Mix,
@@ -303,13 +312,23 @@ public sealed class PvStage3DParameter : EffectShapeParameterBase
     [AnimationSlider("F0", "%", 0, 100)]
     public Animation EdgeDim { get; } = new Animation(35, 0, 100);
 
-    [Display(GroupName = "音楽に合わせる", Name = "BPM", Description = "曲の速さ。拍の強さが0より大きいときに使います")]
+    [Display(GroupName = "音楽に合わせる", Name = "BPM", Description = "曲の速さ(1分間の拍の数)。動きの速さ・動くタイミング・拍のはずみに使います")]
     [AnimationSlider("F0", "", 40, 240)]
     public Animation Bpm { get; } = new Animation(120, 1, 999);
 
     [Display(GroupName = "音楽に合わせる", Name = "拍の強さ", Description = "拍ごとに立体とカメラがはずみます")]
     [AnimationSlider("F0", "%", 0, 200)]
     public Animation Beat { get; } = new Animation(0, 0, 1000);
+
+    [Display(GroupName = "音楽に合わせる", Name = "動きをBPMに合わせる", Description = "入れると、BPMが速いほど動きも速くなります(120で今までと同じ速さ)。拍ごとに動く部品は拍ぴったりに動きます")]
+    [ToggleSlider]
+    public bool BpmMotion { get => bpmMotion; set => Set(ref bpmMotion, value); }
+    bool bpmMotion = true;
+
+    [Display(GroupName = "音楽に合わせる", Name = "動くタイミング", Description = "白黒の図形などで、カクッと動く部品が何拍ごとに動くか")]
+    [EnumComboBox]
+    public PvBeatStep BeatStep { get => beatStep; set => Set(ref beatStep, value); }
+    PvBeatStep beatStep = PvBeatStep.One;
 
     protected override IEnumerable<IAnimatable> GetExtraAnimatables() =>
         [Opacity, Count, SolidSize, Spread, Spin, Move, Yaw, Pitch, Roll, Sway, Zoom, Shade, Fog, LineWidth, CenterClear, CenterDim, EdgeDim, Bpm, Beat];
@@ -354,14 +373,18 @@ public sealed class PvStage3DParameter : EffectShapeParameterBase
         float ph = t * bpm / 60f;
         float beat = c.F(Beat) / 100f * MathF.Exp(-(ph - MathF.Floor(ph)) * 5f);
         float sway = c.F(Sway) / 100f;
+        // 動きの時計: BPMに合わせるときは、BPM120 を今までの速さとして、BPMに比例して進める
+        float tm = BpmMotion ? t * bpm / 120f : t;
+        float perBeat = BeatStep switch { PvBeatStep.Half => 2f, PvBeatStep.Two => .5f, PvBeatStep.Bar => .25f, _ => 1f };
         return new PvStage.Setup
         {
-            W = c.Width, H = c.Height, T = t, Seed = Seed, Scene = Scene, Solid = Solid, Style = Style, Pal = pal, Alpha = op,
+            Sync = BpmMotion, Beats = ph, PerBeat = perBeat,
+            W = c.Width, H = c.Height, T = tm, Seed = Seed, Scene = Scene, Solid = Solid, Style = Style, Pal = pal, Alpha = op,
             N = Math.Clamp((int)c.F(Count), 1, 400),
             Size = c.F(SolidSize) / 100f * (1f + beat * .16f),
             Spread = c.F(Spread) / 100f,
             Spin = c.F(Spin) / 100f,
-            Dist = t * c.F(Move) / 100f * 3.2f,
+            Dist = tm * c.F(Move) / 100f * 3.2f,
             Yaw = Gfx.Rad(c.F(Yaw)) + MathF.Sin(t * .31f) * .09f * sway,
             Pitch = Gfx.Rad(c.F(Pitch)) + MathF.Sin(t * .23f + 1f) * .05f * sway,
             Roll = Gfx.Rad(c.F(Roll)) + MathF.Sin(t * .19f + 2f) * .04f * sway,
@@ -537,6 +560,9 @@ internal sealed class PvStage(PvStage.Setup s)
     internal struct Setup
     {
         public float W, H, T, Size, Spread, Spin, Dist, Yaw, Pitch, Roll, Zoom, Shade, Fog, Line, Clear, Flash, Alpha;
+        /// <summary>true: 動きをBPMに合わせる。Beats=曲の始めからの拍の数、PerBeat=1拍に何回カクッと動くか</summary>
+        public bool Sync;
+        public float Beats, PerBeat;
         public int Seed, N;
         public PvScene Scene;
         public PvSolid Solid;
