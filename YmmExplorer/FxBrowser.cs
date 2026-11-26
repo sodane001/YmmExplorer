@@ -78,7 +78,7 @@ public sealed class FxInfoItem : NotifyBase
 public static class FxCatalog
 {
     /// <summary>サムネイルの作り方を変えた時に上げる</summary>
-    const string Revision = "1";
+    const string Revision = "2";   // 2: 模様・反転のサムネイルが出なかったのを直した(v133)
 
     public static string Folder => Path.Combine(Path.GetDirectoryName(typeof(FxCatalog).Assembly.Location) ?? AppContext.BaseDirectory, "FxThumbs");
 

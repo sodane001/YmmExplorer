@@ -284,9 +284,10 @@ public static class ShapeThumbRenderer
                     try
                     {
                         var f = new YmmExplorer.Fx.FxFrame { Frame = frame, Length = len, Fps = fps, B = b };
+                        // 模様を描くエフェクトは中で BeginDraw するので、描く前(BeginDraw の外)で組み立てる
+                        var img = fx.Build(kit, bmp, f);
                         shot = Capture(dc, FW, FH, () =>
                         {
-                            var img = fx.Build(kit, bmp, f);
                             dc.Transform = place;
                             dc.DrawImage(img);
                         });
@@ -296,7 +297,7 @@ public static class ShapeThumbRenderer
                     if (shot == null) continue;
                     // 違いが大きいほど分かりやすいが、画面全体が別の色に変わった絵(真っ白の光など)は、何のエフェクトか分かりにくいので下げる
                     double d = plain == null ? 1 : Difference(plain, shot);
-                    if (d > 150) d = 300 - d;
+                    if (d > 150) d = Math.Max(0, 300 - d);   // 反転など全体が大きく変わるものも、絵は使う
                     if (d > bestDiff + 1e-6) { bestDiff = d; best = shot; }
                 }
                 try { kit.EndFrame(); kit.EndFrame(); } catch { }
