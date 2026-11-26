@@ -469,7 +469,7 @@ public abstract partial class Q6Art
 
     internal static (string Name, uint M, uint S, Action<IconB> Draw) IconItem(int kind, int a)
     {
-        var arr = Icons[kind];
+        var arr = Icons.TryGetValue(kind, out var a0) ? a0 : MoreIcons[kind];
         return arr[Math.Clamp(a, 0, arr.Length - 1)];
     }
     internal static List<IconOp> IconOps(int kind, int a) { var b = new IconB(); IconItem(kind, a).Draw(b); return b.Ops; }
