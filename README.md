@@ -6,7 +6,7 @@
 ## ダウンロード・入れ方
 
 [Releases](https://github.com/sodane001/YmmExplorer/releases) から `YmmExplorer_(版).ymme` をダウンロードしてください。
-YMM4 を閉じた状態で .ymme を開く(ダブルクリック、または YMM4 の画面にドラッグ)と、プラグインが入ります。
+.ymme をダブルクリックするか、YMM4 の画面にドラッグすると、プラグインが入ります(入れたあとは YMM4 を起動し直してください)。
 手で入れる時は、.ymme を .zip に名前を変えて開き、中の `YmmExplorer` フォルダーを YMM4 の `user\plugin` フォルダーに入れてください。
 
 ## 利用規約
