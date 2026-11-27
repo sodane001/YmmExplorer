@@ -1,4 +1,4 @@
-using System.Collections.ObjectModel;
+﻿using System.Collections.ObjectModel;
 using System.Diagnostics;
 using System.IO;
 using System.Net.Http;
@@ -96,7 +96,7 @@ public sealed class McpHttpClient : IDisposable
         {
             ["protocolVersion"] = protocolVersion,
             ["capabilities"] = new JsonObject(),
-            ["clientInfo"] = new JsonObject { ["name"] = "YmmExplorer", ["version"] = "1.0" },
+            ["clientInfo"] = new JsonObject { ["name"] = "YmmExplorer", ["version"] = "1.2" },
         }, false, ct).ConfigureAwait(false);
         protocolVersion = result?["protocolVersion"]?.ToString() ?? protocolVersion;
         ServerName = result?["serverInfo"]?["name"]?.ToString() ?? "";
