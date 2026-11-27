@@ -20,6 +20,7 @@ public abstract partial class Q6Art
             if (moreIcons != null) return moreIcons;
             var d = new Dictionary<int, (string Name, uint M, uint S, Action<IconB> Draw)[]>();
             foreach (var kv in Icons13) d[kv.Key] = kv.Value;
+            foreach (var kv in Icons14) d[kv.Key] = kv.Value;
             return moreIcons = d;
         }
     }
