@@ -88,6 +88,8 @@ float4 PS(PI i) : SV_Target
         public ID3D11DepthStencilState DepthWrite = null!, DepthTest = null!;
         public ID3D11RasterizerState Raster = null!;
         public ID3DDeviceContextState? State;
+        public IntPtr Ptr;
+        public long Used;
         public void Dispose()
         {
             Vs?.Dispose(); Ps?.Dispose(); Layout?.Dispose(); Cb?.Dispose(); BlendNormal?.Dispose(); BlendAdd?.Dispose();
@@ -96,16 +98,122 @@ float4 PS(PI i) : SV_Target
     }
 
     static readonly object gate = new();
-    static readonly Dictionary<IntPtr, Pipeline> pipelines = [];
+    // デバイスの印(番号)ごとのパイプライン。アドレスは使い回されることがあるので、印で見分ける
+    static readonly Dictionary<long, Pipeline> pipelines = [];
+    const int MaxPipelines = 4;
+    static long useTick;
+    static readonly Guid TokenGuid = new("6b1f2c7e-3a4d-4e5f-9a8b-0c1d2e3f4a5b");
+    static long tokenNext;
+
+    /// <summary>デバイスに付けた番号(初めて見たデバイスには新しい番号を付ける)</summary>
+    static long DeviceToken(ID3D11Device device)
+    {
+        var buf = Marshal.AllocHGlobal(8);
+        try
+        {
+            int size = 8;
+            try
+            {
+                if (device.GetPrivateData(TokenGuid, ref size, buf).Success && size == 8)
+                {
+                    long have = Marshal.ReadInt64(buf);
+                    if (have != 0) return have;
+                }
+            }
+            catch { }
+            long t = Interlocked.Increment(ref tokenNext);
+            Marshal.WriteInt64(buf, t);
+            device.SetPrivateData(TokenGuid, 8, buf);
+            return t;
+        }
+        finally { Marshal.FreeHGlobal(buf); }
+    }
+
+    /// <summary>前のデバイス(同じアドレスで、印が違う物)と、長く使っていない物を捨てる</summary>
+    static void TrimPipelines(IntPtr ptr, long token)
+    {
+        foreach (var kv in pipelines.Where(kv => kv.Value.Ptr == ptr && kv.Key != token).ToList())
+        {
+            pipelines.Remove(kv.Key);
+            try { kv.Value.Dispose(); } catch { }
+        }
+        while (pipelines.Count > MaxPipelines)
+        {
+            var old = pipelines.MinBy(kv => kv.Value.Used);
+            pipelines.Remove(old.Key);
+            try { old.Value.Dispose(); } catch { }
+        }
+    }
     static string? compileError;
 
     int width, height, samples;
+    // msaaTex・depthTex・rtv・dsv は共有の作業用(Scratch)を借りる。自分で持つのは resolveTex と output だけ
     ID3D11Texture2D? msaaTex, depthTex, resolveTex;
+    long targetDevice;
+
+    /// <summary>
+    /// 描く時だけ使う作業用の描画先(マルチサンプルの色と深度)。描き終わるとすぐ出来上がりの絵(resolve)へ写すので、
+    /// すべての図形で1組を使い回せる。デバイスと大きさごとに持ち、使われなくなった古い大きさは捨てる
+    /// </summary>
+    sealed class Scratch
+    {
+        public long Device; public IntPtr Ptr; public int W, H, Samples; public long Used;
+        public ID3D11Texture2D Color = null!, Depth = null!;
+        public ID3D11RenderTargetView Rtv = null!;
+        public ID3D11DepthStencilView Dsv = null!;
+        public void Dispose() { Rtv?.Dispose(); Dsv?.Dispose(); Color?.Dispose(); Depth?.Dispose(); }
+    }
+    static readonly List<Scratch> scratches = [];
+    static long scratchTick;
+    const int MaxScratch = 2;
+
+    static Scratch GetScratch(ID3D11Device device, int w, int h)
+    {
+        lock (gate)
+        {
+            var key = DeviceToken(device);
+            // 同じアドレスの前のデバイスの物は、もう使えないので捨てる
+            for (int i = scratches.Count - 1; i >= 0; i--)
+                if (scratches[i].Ptr == device.NativePointer && scratches[i].Device != key) { try { scratches[i].Dispose(); } catch { } scratches.RemoveAt(i); }
+            var sc = scratches.Find(x => x.Device == key && x.W == w && x.H == h);
+            if (sc is null)
+            {
+                int samples = 1;
+                // 4倍まで(8倍は作業用の大きさが倍になる割に、見た目はほとんど変わらない)
+                foreach (var s in new[] { 4, 2 })
+                    if (device.CheckMultisampleQualityLevels(Format.B8G8R8A8_UNorm, s) > 0 && device.CheckMultisampleQualityLevels(Format.D24_UNorm_S8_UInt, s) > 0) { samples = s; break; }
+                sc = new Scratch { Device = key, Ptr = device.NativePointer, W = w, H = h, Samples = samples };
+                try
+                {
+                    sc.Color = device.CreateTexture2D(new Texture2DDescription(Format.B8G8R8A8_UNorm, w, h, 1, 1, BindFlags.RenderTarget, ResourceUsage.Default, CpuAccessFlags.None, samples, 0));
+                    sc.Rtv = device.CreateRenderTargetView(sc.Color);
+                    sc.Depth = device.CreateTexture2D(new Texture2DDescription(Format.D24_UNorm_S8_UInt, w, h, 1, 1, BindFlags.DepthStencil, ResourceUsage.Default, CpuAccessFlags.None, samples, 0));
+                    sc.Dsv = device.CreateDepthStencilView(sc.Depth);
+                }
+                catch
+                {
+                    try { sc.Dispose(); } catch { }
+                    throw;
+                }
+                sc.Used = ++scratchTick;   // 捨てる物を選ぶ前に「今使った」にする(作ったばかりの物を捨てないように)
+                scratches.Add(sc);
+                // 大きさの違う作業用は、使った順に MaxScratch 個まで残す
+                while (scratches.Count > MaxScratch)
+                {
+                    var old = scratches.MinBy(x => x.Used)!;
+                    scratches.Remove(old); try { old.Dispose(); } catch { }
+                }
+            }
+            sc.Used = ++scratchTick;
+            return sc;
+        }
+    }
     ID3D11RenderTargetView? rtv;
     ID3D11DepthStencilView? dsv;
     ID2D1Bitmap1? output;
     ID3D11Buffer? vb;
     int vbCapacity;
+    long vbDevice;
     readonly List<Vert3D> verts = [];
 
     public static string? LastError { get; private set; }
@@ -117,11 +225,25 @@ float4 PS(PI i) : SV_Target
         System.Diagnostics.Debug.WriteLine("[EffectShape3D] " + e);
     }
 
+    /// <summary>
+    /// 描画の状態を元に戻す。SwapDeviceContextState は、外した方の状態(自分のパイプラインの状態)の参照を1つ増やして返すので、
+    /// それを解放しないと、描くたびに参照が1つずつ残る
+    /// </summary>
+    static void RestoreState(ID3D11DeviceContext1 d3d1, ID3DDeviceContextState prev, ID3DDeviceContextState? ours)
+    {
+        var back = d3d1.SwapDeviceContextState(prev);
+        if (back is null) return;
+        // 同じ入れ物(C# の側の物)が返ってきた時は、入れ物を壊さずに、増えた参照だけを減らす
+        if (ours is not null && ReferenceEquals(back, ours)) Marshal.Release(back.NativePointer);
+        else back.Dispose();
+    }
+
     static Pipeline GetPipeline(ID3D11Device device)
     {
         lock (gate)
         {
-            if (pipelines.TryGetValue(device.NativePointer, out var p)) return p;
+            long token = DeviceToken(device);
+            if (pipelines.TryGetValue(token, out var p)) { p.Used = ++useTick; return p; }
             if (compileError is not null) throw new InvalidOperationException(compileError);
             p = new Pipeline();
             try
@@ -174,7 +296,9 @@ float4 PS(PI i) : SV_Target
                     p.State = d1.CreateDeviceContextState<ID3D11Device>(CreateDeviceContextStateFlags.None, [device.FeatureLevel], out _);
             }
             catch { p.State = null; }
-            pipelines[device.NativePointer] = p;
+            p.Ptr = device.NativePointer; p.Used = ++useTick;
+            pipelines[token] = p;
+            TrimPipelines(device.NativePointer, token);
             return p;
         }
     }
@@ -182,31 +306,29 @@ float4 PS(PI i) : SV_Target
     void EnsureTargets(IGraphicsDevicesAndContext devices, int w, int h)
     {
         var device = devices.D3D.Device;
-        if (w == width && h == height && output is not null) return;
-        ReleaseTargets();
-        width = w; height = h;
-        samples = 1;
-        foreach (var s in new[] { 8, 4, 2 })
-        {
-            if (device.CheckMultisampleQualityLevels(Format.B8G8R8A8_UNorm, s) > 0 && device.CheckMultisampleQualityLevels(Format.D24_UNorm_S8_UInt, s) > 0) { samples = s; break; }
-        }
-        msaaTex = device.CreateTexture2D(new Texture2DDescription(Format.B8G8R8A8_UNorm, w, h, 1, 1, BindFlags.RenderTarget, ResourceUsage.Default, CpuAccessFlags.None, samples, 0));
-        rtv = device.CreateRenderTargetView(msaaTex);
-        depthTex = device.CreateTexture2D(new Texture2DDescription(Format.D24_UNorm_S8_UInt, w, h, 1, 1, BindFlags.DepthStencil, ResourceUsage.Default, CpuAccessFlags.None, samples, 0));
-        dsv = device.CreateDepthStencilView(depthTex);
+        // 作業用は毎回借りる(ほかの図形が先に捨てたり作り直したりしていることがある)
+        var sc = GetScratch(device, w, h);
+        msaaTex = sc.Color; depthTex = sc.Depth; rtv = sc.Rtv; dsv = sc.Dsv; samples = sc.Samples;
+        if (w == width && h == height && output is not null && targetDevice == sc.Device) return;
+        ReleaseOwn();
+        width = w; height = h; targetDevice = sc.Device;
         resolveTex = device.CreateTexture2D(new Texture2DDescription(Format.B8G8R8A8_UNorm, w, h, 1, 1, BindFlags.RenderTarget | BindFlags.ShaderResource));
         using var surface = resolveTex.QueryInterface<IDXGISurface>();
         output = devices.DeviceContext.CreateBitmapFromDxgiSurface(surface, new BitmapProperties1(new D2DPixelFormat(Format.B8G8R8A8_UNorm, D2DAlphaMode.Premultiplied), 96, 96, BitmapOptions.None));
     }
 
-    void ReleaseTargets()
+    /// <summary>自分の出来上がりの絵だけを捨てる(作業用は共有なので捨てない)</summary>
+    void ReleaseOwn()
     {
         output?.Dispose(); output = null;
-        rtv?.Dispose(); rtv = null;
-        dsv?.Dispose(); dsv = null;
-        msaaTex?.Dispose(); msaaTex = null;
-        depthTex?.Dispose(); depthTex = null;
         resolveTex?.Dispose(); resolveTex = null;
+        width = height = 0;
+    }
+
+    void ReleaseTargets()
+    {
+        ReleaseOwn();
+        rtv = null; dsv = null; msaaTex = null; depthTex = null;
     }
 
     /// <summary>描画命令の入った commandList を3Dにして描く。戻り値は D2D で貼れる画像</summary>
@@ -311,7 +433,7 @@ float4 PS(PI i) : SV_Target
         }
         finally
         {
-            if (d3d1 is not null && prev is not null) { d3d1.SwapDeviceContextState(prev); prev.Dispose(); }
+            if (d3d1 is not null && prev is not null) { RestoreState(d3d1, prev, pipe.State); prev.Dispose(); }
             d3d1?.Dispose();
             mt?.Leave();
         }
@@ -336,23 +458,38 @@ float4 PS(PI i) : SV_Target
 
     List<Prim3D>? lastPrims;
     Native3D? lastNative;
+    /// <summary>覚えている形が変わるたびに増える(同じ入れ物を使い回しても、変わったと分かるように)</summary>
+    int lastVersion;
+    public Native3D? HeldNative => lastNative;
+
+    // 3Dプレビュー用の頂点(ふだんの画面用の verts とは別。形と半透明の順番が同じなら、作り直しも GPU への転送もしない)
+    readonly List<Vert3D> extVerts = [];
+    List<Batch> extBatches = [];
+    int extBuiltVersion = -1, extUploadedVersion = -1;
+    long extUploadedDevice;
+    int[] extOrder = [], extOrderPrev = [];
+    float[] extDist = [];
     /// <summary>今描いているのが専用3Dモデル(面の向きで光を当て、側面を暗くしない)か</summary>
     bool lastLitModel;
     DrawContext lastCtx;
     long lastFrame = long.MinValue;
-    IntPtr extDevice;
+    long extDevice;
     ID3D11Buffer? extVb;
     int extCapacity;
 
     /// <summary>描画命令を部品の形に直して、覚えておく(3Dプレビューから描かれる時に使う)</summary>
     public void Collect(IGraphicsDevicesAndContext devices, ID2D1CommandList commandList, in DrawContext ctx)
     {
+        lastVersion++;
         using var factory = devices.DeviceContext.Factory;
         var col = new PrimCollector(factory, ctx.Width, ctx.Height);
-        commandList.Stream(col);
-        lastPrims = col.Prims;
-        lastNative = null;
-        col.Dispose();
+        try
+        {
+            commandList.Stream(col);
+            lastPrims = col.Prims;
+            lastNative = null;
+        }
+        finally { col.Dispose(); }   // 途中で失敗しても解放する
         lastCtx = ctx;
         lastFrame = ctx.Frame;
     }
@@ -360,6 +497,7 @@ float4 PS(PI i) : SV_Target
     /// <summary>本物の3Dの形を、3Dプレビューから描かれる時のために覚えておく</summary>
     public void CollectNative(Native3D n, in DrawContext ctx)
     {
+        lastVersion++;
         lastNative = n;
         lastPrims = null;
         lastCtx = ctx;
@@ -418,17 +556,22 @@ float4 PS(PI i) : SV_Target
     /// 3Dプレビュー(YMM43D)が描いている最中の描画先に、立体をそのまま描く。
     /// world=アイテムの置き場所、viewProj=3Dプレビューのカメラ。深度は3Dプレビューのものを使うので、他の3Dの物と正しく前後する
     /// </summary>
-    public void DrawExternal(ID3D11Device device, ID3D11DeviceContext d3d, Matrix4x4 world, Matrix4x4 viewProj, Vector3 cam, float opacity, in Shape3DSettings s)
+    public void DrawExternal(ID3D11Device device, ID3D11DeviceContext d3d, Matrix4x4 world, Matrix4x4 viewProj, Vector3 cam, float opacity, in Shape3DSettings s, bool depthOnly = false)
     {
         var ctx = lastCtx;
         List<Batch> batches;
         Matrix4x4 model; Vector3 camPos; Vector4 fog;
         bool baked = false;
+        List<Vert3D> src;
+        bool dirty;
         if (lastNative is { } nat)
         {
-            batches = BuildNativeMesh(nat, ctx, s, out model, out camPos, out _, world, cam);
+            batches = ExternalNativeMesh(nat, s, world, cam, out model, out dirty);
+            camPos = cam;
             fog = new Vector4(1, 2, 0, 1);
             baked = !nat.Lit;
+            lastLitModel = nat.Lit;
+            src = extVerts;
         }
         else
         {
@@ -436,20 +579,27 @@ float4 PS(PI i) : SV_Target
             float fov = Math.Clamp(s.Fov, 1f, 170f) * MathF.PI / 180f;
             float camDist = MathF.Max(ctx.Height / 2f / MathF.Tan(fov / 2f), 1f);
             batches = BuildMesh(lastPrims, ctx, s, camDist, out model, out camPos, out _, out fog, world, cam);
+            src = verts;
+            dirty = true;
+            extBuiltVersion = -1;
         }
-        if (verts.Count == 0) return;
+        if (src.Count == 0) return;
         fog.W = Math.Clamp(opacity, 0f, 1f);
         var pipe = GetPipeline(device);
 
         // 頂点は、3Dプレビューのデバイス用に別に持つ(YMM4の画面とは、デバイスが違うことがある)
         int stride = Marshal.SizeOf<Vert3D>();
-        if (extVb is null || extDevice != device.NativePointer || extCapacity < verts.Count)
+        long devToken = DeviceToken(device);
+        if (extVb is null || extDevice != devToken || extCapacity < src.Count)
         {
             extVb?.Dispose();
-            extDevice = device.NativePointer;
-            extCapacity = Math.Max(verts.Count * 3 / 2, 4096);
+            extDevice = devToken;
+            extCapacity = Math.Max(src.Count * 3 / 2, 4096);
             extVb = device.CreateBuffer(new BufferDescription(extCapacity * stride, BindFlags.VertexBuffer, ResourceUsage.Default, CpuAccessFlags.None));
+            dirty = true;
         }
+        // 前に送った頂点と同じなら、GPU へ送り直さない
+        bool upload = dirty || extUploadedVersion != extBuiltVersion || extUploadedDevice != devToken || src != extVerts;
 
         // 3Dプレビューの描画先・深度・表示範囲を引き継いで、3D用の状態に切り替える
         var oldRtv = new ID3D11RenderTargetView[1];
@@ -460,7 +610,12 @@ float4 PS(PI i) : SV_Target
         try
         {
             if (d3d1 is not null) prev = d3d1.SwapDeviceContextState(pipe.State!);
-            d3d.UpdateSubresource(CollectionsMarshal.AsSpan(verts), extVb, 0, 0, 0, new Vortice.Mathematics.Box(0, 0, 0, verts.Count * stride, 1, 1));
+            if (upload)
+            {
+                d3d.UpdateSubresource(CollectionsMarshal.AsSpan(src), extVb, 0, 0, 0, new Vortice.Mathematics.Box(0, 0, 0, src.Count * stride, 1, 1));
+                extUploadedVersion = src == extVerts ? extBuiltVersion : -1;
+                extUploadedDevice = devToken;
+            }
             float lyaw = s.LightYaw * MathF.PI / 180f, lpitch = s.LightPitch * MathF.PI / 180f;
             // 光: 3Dプレビューの空間で、手前(+Z)の左右・上下から来る
             var light = Vector3.Normalize(new Vector3(MathF.Sin(lyaw) * MathF.Cos(lpitch), MathF.Sin(lpitch), MathF.Cos(lyaw) * MathF.Cos(lpitch)));
@@ -488,10 +643,12 @@ float4 PS(PI i) : SV_Target
             d3d.IASetVertexBuffer(0, extVb, stride, 0);
             d3d.VSSetShader(pipe.Vs);
             d3d.VSSetConstantBuffer(0, pipe.Cb);
-            d3d.PSSetShader(pipe.Ps);
+            // 深度だけの時(3Dプレビューの影・深度の下描き): 色は塗らず、深度を書く不透明な所だけを描く
+            d3d.PSSetShader(depthOnly ? null : pipe.Ps);
             d3d.PSSetConstantBuffer(0, pipe.Cb);
             foreach (var b in batches)
             {
+                if (depthOnly && !b.Write) continue;
                 d3d.OMSetBlendState(b.Add ? pipe.BlendAdd : pipe.BlendNormal, null, -1);
                 d3d.OMSetDepthStencilState(b.Write ? pipe.DepthWrite : pipe.DepthTest, 0);
                 d3d.Draw(b.Count, b.Start);
@@ -499,7 +656,7 @@ float4 PS(PI i) : SV_Target
         }
         finally
         {
-            if (d3d1 is not null && prev is not null) { d3d1.SwapDeviceContextState(prev); prev.Dispose(); }
+            if (d3d1 is not null && prev is not null) { RestoreState(d3d1, prev, pipe.State); prev.Dispose(); }
             else
             {
                 d3d.OMSetRenderTargets(oldRtv[0]!, oldDsv);
@@ -512,10 +669,12 @@ float4 PS(PI i) : SV_Target
     void UploadVertices(ID3D11Device device, ID3D11DeviceContext d3d)
     {
         int stride = Marshal.SizeOf<Vert3D>();
-        if (vb is null || vbCapacity < verts.Count)
+        long vbToken = DeviceToken(device);
+        if (vb is null || vbCapacity < verts.Count || vbDevice != vbToken)
         {
             vb?.Dispose();
             vbCapacity = Math.Max(verts.Count * 3 / 2, 4096);
+            vbDevice = vbToken;
             vb = device.CreateBuffer(new BufferDescription(vbCapacity * stride, BindFlags.VertexBuffer, ResourceUsage.Default, CpuAccessFlags.None));
         }
         // 使う所だけを書き込む(後ろの残りは描かないので古いままでよい)
@@ -653,6 +812,45 @@ float4 PS(PI i) : SV_Target
             else
                 batches.Add(new Batch(st, cnt, pl.P.Add, false));
         }
+        return batches;
+    }
+
+    /// <summary>
+    /// 3Dプレビューの中で描く頂点を用意する。形が前と同じなら、前の頂点をそのまま使う。
+    /// 半透明のまとまりがある時だけ、カメラから遠い順を調べ、順番が変わった時だけ並べ直す(LINQ を使わず、作業用の配列を使い回す)
+    /// </summary>
+    List<Batch> ExternalNativeMesh(Native3D n, in Shape3DSettings s, Matrix4x4 world, Vector3 cam, out Matrix4x4 model, out bool dirty)
+    {
+        model = ExternalModel(s, 0f);
+        var toWorld = model * world;
+        var groups = CollectionsMarshal.AsSpan(n.Groups);
+        int tc = 0;
+        foreach (var g in groups) if (!g.Opaque) tc++;
+        dirty = extBuiltVersion != lastVersion;
+        if (tc > 0)
+        {
+            if (extOrder.Length < tc) { extOrder = new int[tc]; extDist = new float[tc]; }
+            int k = 0;
+            for (int i = 0; i < groups.Length; i++)
+                if (!groups[i].Opaque) { extOrder[k] = i; extDist[k] = Vector3.DistanceSquared(Vector3.Transform(groups[i].Center, toWorld), cam); k++; }
+            // 遠い順(距離の大きい順)
+            Array.Sort(extDist, extOrder, 0, tc);
+            Array.Reverse(extOrder, 0, tc);
+            if (!dirty && (extOrderPrev.Length != tc || !extOrder.AsSpan(0, tc).SequenceEqual(extOrderPrev))) dirty = true;
+        }
+        if (!dirty) return extBatches;
+
+        extVerts.Clear();
+        var all = CollectionsMarshal.AsSpan(n.Verts);
+        var batches = new List<Batch>(2);
+        foreach (var g in groups) if (g.Opaque) extVerts.AddRange(all.Slice(g.Start, g.Count));
+        if (extVerts.Count > 0) batches.Add(new Batch(0, extVerts.Count, false, true));
+        int ts = extVerts.Count;
+        for (int k = 0; k < tc; k++) { var g = groups[extOrder[k]]; extVerts.AddRange(all.Slice(g.Start, g.Count)); }
+        if (extVerts.Count > ts) batches.Add(new Batch(ts, extVerts.Count - ts, false, false));
+        extOrderPrev = tc > 0 ? extOrder.AsSpan(0, tc).ToArray() : [];
+        extBatches = batches;
+        extBuiltVersion = lastVersion;
         return batches;
     }
 

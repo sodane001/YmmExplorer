@@ -1,4 +1,4 @@
-using System.Numerics;
+﻿using System.Numerics;
 using Vortice;
 using Vortice.DCommon;
 using Vortice.Direct2D1;
@@ -55,6 +55,7 @@ namespace YMM4EffectShapes
             try { roundStroke?.Dispose(); } catch { }
             try { factory?.Dispose(); } catch { }
             roundStroke = null; factory = null; factoryOwner = IntPtr.Zero;
+            if (glowStops != null) foreach (var gs in glowStops.Values) try { gs.Dispose(); } catch { }
             glowStops = null; glowOwner = IntPtr.Zero; glowBroken = false;
             broken = false; failures = 0;
         }

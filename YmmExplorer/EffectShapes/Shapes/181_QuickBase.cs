@@ -159,6 +159,19 @@ public abstract class QuickShapeParameter : EffectShapeParameterBase, IParamGuid
     protected float Spd(in DrawContext c) => c.F(Speed) / 100f;
     /// <summary>出てからの進み(0→1、出る時間をかけて)</summary>
     protected float Intro(in DrawContext c, float delay = 0f, float dur = 0.5f) => Math.Clamp((c.Time - delay) / MathF.Max(0.01f, dur), 0f, 1f);
+
+    /// <summary>
+    /// 拡大して出てくる図形の大きさ(0〜1、出る時は少しはずむ)。「出る時間」で大きくなり、「消える時間(アイテムの終わり)」で小さくなって消える。
+    /// どちらも 0 の時は、その動きをしない
+    /// </summary>
+    protected float PopScale(in DrawContext c)
+    {
+        float inT = c.F(InTime), outT = c.F(OutTime);
+        float pin = inT <= 0.001f ? 1f : DrawKit.EaseOutBack(Math.Clamp(c.Time / inT, 0f, 1f));
+        float left = (c.Length - c.Frame) / (float)Math.Max(1, c.Fps);
+        float pout = outT <= 0.001f ? 1f : DrawKit.EaseOut(Math.Clamp(left / outT, 0f, 1f));
+        return MathF.Max(.01f, MathF.Min(pin, pout));
+    }
     protected string Str => TextKit.Lines(Text);
     /// <summary>専用3Dモデル用: 「文字」の行・項目(カンマ・読点・改行で区切る)</summary>
     internal List<string> ItemsForModel => Items;
@@ -182,7 +195,7 @@ public abstract class QuickShapeParameter : EffectShapeParameterBase, IParamGuid
         var m = new Sculpt(n, o.X, o.Y, scene ? U0(c) : U(c), a, c.Width, c.Height);
         m.Font = string.IsNullOrWhiteSpace(Font) ? TextKit.DefaultFont : Font;
         m.Now = c.Time;
-        float pi = scene || !PopInForModel ? 1f : MathF.Max(.01f, DrawKit.EaseOutBack(Intro(c, 0f, .4f)));
+        float pi = scene || !PopInForModel ? 1f : PopScale(c);
         float t = c.Time * Spd(c), v = Amt(c), v2 = Amt2(c);
         float rot = Gfx.Rad(c.F(Rotation));
         m.Turn(0, 0, rot, () => m.Scale(0, 0, 0, pi, () => model(this, m, t, v, v2)));

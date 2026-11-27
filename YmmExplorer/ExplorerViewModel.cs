@@ -844,6 +844,7 @@ public class ExplorerViewModel : NotifyBase, IDisposable
         EffectShapes.Dispose();
         FxBrowser.Dispose();
         TextBrowser.Dispose();
+        AiEdit.Dispose();
         foreach (var g in TabGroups.All) g.TabsChanged -= OnTabsChanged;
         WindowTabs.Changed -= OnTabsChanged;
         foreach (var list in TabToggles.Values) foreach (var t in list) t.Detach();

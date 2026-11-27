@@ -1,4 +1,4 @@
-using System.Collections;
+﻿using System.Collections;
 using System.Collections.ObjectModel;
 using System.ComponentModel.DataAnnotations;
 using System.Globalization;
@@ -26,11 +26,17 @@ public static class AiItemIds
 
     public static string IdOf(object item)
     {
-        if (ids.TryGetValue(item, out var id)) return id;
-        id = "#" + next++;
-        ids.Add(item, id);
-        byId[id] = new WeakReference<object>(item);
-        return id;
+        lock (byId)
+        {
+            if (ids.TryGetValue(item, out var id)) return id;
+            id = "#" + next++;
+            ids.Add(item, id);
+            byId[id] = new WeakReference<object>(item);
+            // 消えたアイテムの番号は、ときどき掃除する(番号の表がふくらみ続けないように)
+            if (byId.Count % 256 == 0)
+                foreach (var k in byId.Where(kv => !kv.Value.TryGetTarget(out _)).Select(kv => kv.Key).ToList()) byId.Remove(k);
+            return id;
+        }
     }
 
     public static object? Find(string? id)
@@ -38,7 +44,7 @@ public static class AiItemIds
         if (string.IsNullOrWhiteSpace(id)) return null;
         id = id.Trim();
         if (!id.StartsWith('#')) id = "#" + id;
-        return byId.TryGetValue(id, out var w) && w.TryGetTarget(out var o) ? o : null;
+        lock (byId) return byId.TryGetValue(id, out var w) && w.TryGetTarget(out var o) ? o : null;
     }
 }
 
@@ -1502,6 +1508,9 @@ public static class AiLibrary
     static readonly Dictionary<string, Source> byId = new(StringComparer.OrdinalIgnoreCase);
     static readonly Dictionary<string, string> idByKey = new(StringComparer.OrdinalIgnoreCase);
     static int nextM = 1, nextF = 1, nextP = 1;
+    // 番号を付けた順(上限をこえたら、古い物から忘れる。プリセットの中身も持つので、ふくらみ続けないように)
+    static readonly Queue<(string Id, string Key)> order = new();
+    const int MaxSources = 3000;
 
     public static Source? Find(string? id)
     {
@@ -1516,6 +1525,13 @@ public static class AiLibrary
         var s = make(id);
         idByKey[prefix + key] = id;
         byId[id] = s;
+        order.Enqueue((id, prefix + key));
+        while (order.Count > MaxSources)
+        {
+            var (oid, okey) = order.Dequeue();
+            byId.Remove(oid);
+            if (idByKey.TryGetValue(okey, out var cur) && cur == oid) idByKey.Remove(okey);
+        }
         return s;
     }
 

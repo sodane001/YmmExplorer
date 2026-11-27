@@ -75,7 +75,7 @@ public abstract class Q4Art : Q3Param
         float k = scene ? U0(c) : U(c);
         var pen = new ArtPen(dc, b, o, k, a, Font, c.Width, c.Height, c.Time);
         var prev = dc.Transform;
-        if (!scene) { float p = MathF.Max(.01f, DrawKit.EaseOutBack(Intro(c, 0f, .4f))); dc.Transform = Matrix3x2.CreateScale(p, p, o) * prev; }
+        if (!scene) { float p = PopScale(c); dc.Transform = Matrix3x2.CreateScale(p, p, o) * prev; }
         Art(pen, c.Time * Spd(c), Amt(c), Amt2(c));
         dc.Transform = prev;
     }

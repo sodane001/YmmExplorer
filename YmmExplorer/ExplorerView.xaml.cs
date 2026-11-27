@@ -1,4 +1,4 @@
-using System.ComponentModel;
+﻿using System.ComponentModel;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
@@ -117,7 +117,14 @@ public partial class ExplorerView : UserControl
                 hooked.ItemEditor.IsEditing = () => ItemViewRoot.IsKeyboardFocusWithin && Keyboard.FocusedElement is System.Windows.Controls.Primitives.TextBoxBase;
             }
         };
-        Unloaded += (_, _) => { Vm?.ClosePreview(); ShortcutHost.EarlyKeyDown -= OnEarlyKey; };
+        Unloaded += (_, _) =>
+        {
+            Vm?.ClosePreview();
+            ShortcutHost.EarlyKeyDown -= OnEarlyKey;
+            // 閉じた時は、再生中の動画・音声を止めて、ファイルとタイマーを放す
+            foreach (var fp in new[] { presetFrames, templateFrames, materialFrames, viewerFrames }) { try { fp?.Release(); } catch { } }
+            try { StopMedia(); } catch { }
+        };
         Loaded += (_, _) => { ShortcutHost.EarlyKeyDown -= OnEarlyKey; ShortcutHost.EarlyKeyDown += OnEarlyKey; };
         // ショートカットでタブを移動する時、最後にさわったウィンドウ(YmmExplorer / ２ / ３…)を動かす
         PreviewMouseDown += (_, _) => ShortcutHost.Touch(Vm);

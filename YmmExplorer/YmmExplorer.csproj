@@ -7,7 +7,7 @@
     <!-- YMM4本体が.NET 10のため net10.0 を指定(.NET 10 SDKが必要) -->
     <TargetFramework>net10.0-windows10.0.19041.0</TargetFramework>
     <!-- プラグインの版(DLL のバージョンに入る) -->
-    <Version>1.2.0</Version>
+    <Version>1.2.1</Version>
     <UseWPF>true</UseWPF>
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>

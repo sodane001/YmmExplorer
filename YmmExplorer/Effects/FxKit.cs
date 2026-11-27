@@ -1,4 +1,4 @@
-using System.Numerics;
+﻿using System.Numerics;
 using System.Reflection;
 using Vortice;
 using Vortice.Direct2D1;
@@ -65,8 +65,20 @@ internal sealed class FxProcessor : IVideoEffectProcessor
         this.item = item;
         kit = new FxKit(devices.DeviceContext);
         // 出力は、いつも同じ「通り道」(何もしない変形)にしておき、毎フレーム入力を差し替える
-        pass = new AffineTransform2D(devices.DeviceContext);
-        Output = pass.Output;
+        // (途中で失敗した時は、先に作った物を解放してから知らせる)
+        AffineTransform2D? p = null;
+        try
+        {
+            p = new AffineTransform2D(devices.DeviceContext);
+            Output = p.Output;
+            pass = p;
+        }
+        catch
+        {
+            try { p?.Dispose(); } catch { }
+            try { kit.Dispose(); } catch { }
+            throw;
+        }
     }
 
     public void SetInput(ID2D1Image? input)
@@ -167,7 +179,8 @@ public sealed class FxKit : IDisposable
                     ?? throw new InvalidOperationException($"{typeName} エフェクトが、この YMM4 では使えません");
             fx = (ID2D1Effect)(Activator.CreateInstance(t, Dc) ?? throw new InvalidOperationException(typeName));
         }
-        e = (fx, fx.Output);
+        try { e = (fx, fx.Output); }
+        catch { try { fx.Dispose(); } catch { } throw; }
         effects[id] = e;
         return e;
     }

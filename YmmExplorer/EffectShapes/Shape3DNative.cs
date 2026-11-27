@@ -1,4 +1,4 @@
-using System.Numerics;
+﻿using System.Numerics;
 
 namespace YMM4EffectShapes;
 
@@ -10,8 +10,9 @@ internal sealed class Native3D
 {
     internal readonly record struct Group(int Start, int Count, Vector3 Center, bool Opaque);
 
-    public readonly List<Vert3D> Verts = new(8192);
-    public readonly List<Group> Groups = new(512);
+    // 初めは小さく持つ(使い回すので、2回目からは前の大きさのまま使える)
+    public readonly List<Vert3D> Verts = new(256);
+    public readonly List<Group> Groups = new(16);
     /// <summary>カメラから画面(Z=0)までの距離(px)。画面の高さとあわせて、見え方の広さが決まる</summary>
     public float Cam = 1000f;
     /// <summary>ふだんの画面で回す時の中心(Z)</summary>
@@ -29,6 +30,16 @@ internal sealed class Native3D
     readonly HashSet<(long, long)> edges = [];
 
     public bool IsEmpty => Verts.Count == 0;
+
+    /// <summary>中身を空にして、作り直せるようにする(配列の大きさはそのまま残すので、毎回の確保が要らない)</summary>
+    public void Reset()
+    {
+        Verts.Clear(); Groups.Clear(); edges.Clear();
+        Cam = 1000f; PivotZ = 0f; PivotXY = default; Lit = false;
+        Width = 1920f; Height = 1080f;
+        Min = new Vector3(float.MaxValue); Max = new Vector3(float.MinValue);
+        groupStart = -1; groupPoints = 0; groupSum = default; groupOpaque = false;
+    }
 
     /// <summary>1つの立体のまとまりを始める(半透明の時は、まとまりごとに奥から重ねる)</summary>
     public void Begin()

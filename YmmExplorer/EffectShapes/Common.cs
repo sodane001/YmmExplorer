@@ -227,12 +227,22 @@ internal sealed class EffectShapeSource : IShapeSource
         commandList = outer;
     }
 
+    // 3Dの形の入れ物は、毎回作らずに2つを交互に使う(3Dプレビューが描いている方は使わない)
+    readonly Native3D?[] nativePool = new Native3D?[2];
+    int nativeNext;
+
     Native3D? TryNative(in DrawContext ctx)
     {
         try
         {
-            var n = new Native3D();
-            return parameter.BuildNative3D(ctx, n) ? n : null;
+            var held = renderer3D?.HeldNative;
+            int i = nativeNext;
+            if (nativePool[i] is { } c && ReferenceEquals(c, held)) i ^= 1;
+            var n = nativePool[i] ??= new Native3D();
+            n.Reset();
+            if (!parameter.BuildNative3D(ctx, n)) return null;
+            nativeNext = i ^ 1;
+            return n;
         }
         catch (Exception e) { Shape3DRenderer.Report(e); return null; }
     }
@@ -268,7 +278,7 @@ internal sealed class EffectShapeSource : IShapeSource
             var r = renderer3D ??= new Shape3DRenderer();
             if (!r.HasFrame(frame)) Record(r, frame, length, fps);
             var ctx = r.LastContext;
-            r.DrawExternal(device, d3d, world, viewProj, cam, opacity, parameter.Get3D(ctx));
+            r.DrawExternal(device, d3d, world, viewProj, cam, opacity, parameter.Get3D(ctx), depthOnly);
         }
         catch (Exception e) { Shape3DRenderer.Report(e); }
     }

@@ -1,4 +1,4 @@
-using System.Collections;
+﻿using System.Collections;
 using System.Collections.ObjectModel;
 using System.Globalization;
 using System.IO;
@@ -497,8 +497,19 @@ public static class AiFiles
     }
 }
 
-public sealed class AiEditVm : NotifyBase
+public sealed class AiEditVm : NotifyBase, IDisposable
 {
+    Action? unsubscribe;
+
+    void OnAiStatus(string msg) => Application.Current?.Dispatcher.BeginInvoke(new Action(() => { if (busy) Status = msg; }));
+
+    /// <summary>静的イベントの購読をやめる(ツールの画面を閉じた時)</summary>
+    public void Dispose()
+    {
+        unsubscribe?.Invoke();
+        unsubscribe = null;
+    }
+
     readonly ExplorerSettings settings = ExplorerSettings.Instance;
 
     public AiEditVm()
@@ -549,8 +560,15 @@ public sealed class AiEditVm : NotifyBase
         ClearLogCommand = new RelayCommand(_ => { Log.Clear(); AiLog.Save(Log); Status = "変更ログを消しました"; });
         OpenLogFolderCommand = new RelayCommand(_ => { try { System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo(AiLog.Folder) { UseShellExecute = true }); } catch { } });
         showSettings = string.IsNullOrEmpty(KeyFor(ProviderId)) && AiClient.NeedsKey(ProviderId);
-        AiClient.Retrying += msg => Application.Current?.Dispatcher.BeginInvoke(new Action(() => { if (busy) Status = msg; }));
-        AiClient.Progress += msg => Application.Current?.Dispatcher.BeginInvoke(new Action(() => { if (busy) Status = msg; }));
+        // AiClient の静的イベントは、この画面を弱く持つ(閉じた画面が、購読のせいでメモリに残り続けないように)。
+        // 画面が無くなっていたら、次に呼ばれた時に自分で購読をやめる。Dispose でもやめる
+        var me = new WeakReference<AiEditVm>(this);
+        Action<string>? retry = null, progress = null;
+        retry = msg => { if (me.TryGetTarget(out var vm)) vm.OnAiStatus(msg); else AiClient.Retrying -= retry; };
+        progress = msg => { if (me.TryGetTarget(out var vm)) vm.OnAiStatus(msg); else AiClient.Progress -= progress; };
+        AiClient.Retrying += retry;
+        AiClient.Progress += progress;
+        unsubscribe = () => { AiClient.Retrying -= retry; AiClient.Progress -= progress; };
         foreach (var e in AiLog.Load()) Log.Add(e);
         ResetModelChoices();
         _ = AutoFetchModelsAsync();
